@@ -1,0 +1,166 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const socialLinks = [
+  { label: "X", href: "https://x.com/sfloresone" },
+  { label: "Github", href: "https://github.com/sfloresone" },
+  { label: "LinkedIn", href: "https://linkedin.com/in/sfloresone" },
+  { label: "Email", href: "mailto:hello@sflores.one" },
+  { label: "CV", href: "/cv" },
+];
+---
+
+<Layout title="Sergio Flores">
+  <section id="home" class="min-h-screen bg-white text-black">
+    <div class="max-w-[72ch] mx-auto px-6 pt-32 pb-16">
+      <h1 class="font-heading font-medium text-5xl sm:text-6xl lg:text-7xl mb-4 animate-fade-in-up">
+        Sergio Flores
+      </h1>
+
+      <p class="font-sans font-medium uppercase tracking-widest text-sm sm:text-base mb-16 animate-fade-in-up delay-200">
+        ENGINEERING &amp; PRODUCT
+      </p>
+
+      <p class="font-sans text-lg sm:text-xl leading-relaxed animate-fade-in-up delay-300">
+        Soy desarrollador de software especializado en construir experiencias
+        digitales rápidas, accesibles y con atención al detalle. Me mueve
+        crear proyectos donde el código no solo funciona, sino que se siente
+        bien al usarlo. Este espacio es mi rincón personal para compartir
+        trabajo, ideas y lo que voy aprendiendo en el camino.
+      </p>
+
+      <div class="flex justify-between items-center mt-16 text-base animate-fade-in-up delay-500">
+        <div class="flex items-center gap-2 flex-wrap">
+          {
+            socialLinks.map((link, index) => (
+              <>
+                {link.label === "Email" ? (
+                  <button
+                    class="font-sans font-medium tracking-wide animate-fade-in hover:opacity-60 transition-opacity border-none bg-transparent cursor-pointer p-0"
+                    style={`animation-delay: ${500 + index * 100}ms`}
+                    data-copy
+                    data-email="hello@sflores.one"
+                  >
+                    <span class="copy-label">Email</span>
+                    <span class="copy-check hidden">✓ Copied</span>
+                  </button>
+                ) : (
+                  <a
+                    href={link.href}
+                    class="font-sans font-medium tracking-wide animate-fade-in hover:opacity-60 transition-opacity"
+                    style={`animation-delay: ${500 + index * 100}ms`}
+                    target={link.label === "CV" ? undefined : "_blank"}
+                    rel={link.label === "CV" ? undefined : "noopener noreferrer"}
+                  >
+                    {link.label}
+                  </a>
+                )}
+                {index < socialLinks.length - 1 && (
+                  <span class="opacity-40 select-none">·</span>
+                )}
+              </>
+            ))
+          }
+        </div>
+
+        <div class="font-bold animate-fade-in" style="animation-delay: 1000ms">
+          Be crazy.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section
+    id="projects"
+    class="snap-start min-h-screen bg-black text-white flex items-center justify-center"
+  >
+    <div class="max-w-[72ch] mx-auto px-6 py-24">
+      <h2 class="font-heading font-medium text-4xl mb-4">Projects</h2>
+      <p class="font-sans text-lg">Coming soon.</p>
+    </div>
+  </section>
+
+  <section
+    id="writing"
+    class="snap-start min-h-screen bg-white text-black flex items-center justify-center"
+  >
+    <div class="max-w-[72ch] mx-auto px-6 py-24">
+      <h2 class="font-heading font-medium text-4xl mb-4">Writing/Thinking</h2>
+      <p class="font-sans text-lg">Coming soon.</p>
+    </div>
+  </section>
+
+  <section
+    id="about"
+    class="snap-start min-h-screen bg-black text-white flex items-center justify-center"
+  >
+    <div class="max-w-[72ch] mx-auto px-6 py-24">
+      <h2 class="font-heading font-medium text-4xl mb-4">About</h2>
+      <p class="font-sans text-lg">Coming soon.</p>
+    </div>
+  </section>
+
+  <button
+    id="back-to-top"
+    class="fixed bottom-8 right-8 z-50 rounded-full w-10 h-10 flex items-center justify-center invisible opacity-0 transition-all duration-300 cursor-pointer shadow-sm bg-black/80 text-white border border-white/30 hover:bg-black"
+    aria-label="Volver arriba"
+  >
+    ↑
+  </button>
+</Layout>
+
+<script>
+  const hero = document.getElementById("home");
+  const topBtn = document.getElementById("back-to-top");
+
+  if (hero && topBtn) {
+    const show = (visible) => {
+      topBtn.classList.toggle("invisible", !visible);
+      topBtn.classList.toggle("opacity-100", visible);
+    };
+
+    new IntersectionObserver(
+      ([entry]) => show(!entry.isIntersecting),
+      { threshold: 0 }
+    ).observe(hero);
+
+    topBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  if (topBtn) {
+    new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const isDark = entry.target.classList.contains("bg-black");
+          topBtn.classList.toggle("invert", isDark);
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute("content", isDark ? "#000000" : "#ffffff");
+        }
+      }
+    }, { threshold: 0.4 }).observe(document.querySelectorAll("section[id]"));
+  }
+
+  document.querySelectorAll("[data-copy]").forEach((el) => {
+    el.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(el.dataset.email);
+        el.querySelector(".copy-label").classList.add("hidden");
+        el.querySelector(".copy-check").classList.remove("hidden");
+        setTimeout(() => {
+          el.querySelector(".copy-check").classList.add("hidden");
+          el.querySelector(".copy-label").classList.remove("hidden");
+        }, 2500);
+      } catch {
+        const fallback = document.createElement("textarea");
+        fallback.value = el.dataset.email;
+        document.body.appendChild(fallback);
+        fallback.select();
+        document.execCommand("copy");
+        document.body.removeChild(fallback);
+      }
+    });
+  });
+</script>
