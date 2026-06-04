@@ -1,0 +1,156 @@
+---
+import Layout from "./Layout.astro";
+import "../styles/article-content.css";
+
+interface TagStyle {
+  bar: string;
+  text: string;
+}
+
+interface Props {
+  frontmatter: {
+    title: string;
+    date: Date;
+    category: string;
+    author: string;
+    description?: string;
+    tags?: string[];
+  };
+}
+
+const { frontmatter } = Astro.props;
+
+const tagStyles: Record<string, TagStyle> = {
+  Dev: { bar: "#3b82f6", text: "#2563eb" },
+  Design: { bar: "#ec4899", text: "#db2777" },
+  Life: { bar: "#10b981", text: "#059669" },
+};
+const tag = tagStyles[frontmatter.category] ?? { bar: "#000", text: "#000" };
+
+const formatted = frontmatter.date.toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+---
+
+<Layout title={frontmatter.title} description={frontmatter.description}>
+  <article class="max-w-[85ch] mx-auto px-6 py-24">
+    <header class="text-center mb-8">
+      <p
+        class="font-body text-sm font-medium uppercase tracking-widest mb-4"
+        style={`color: ${tag.text}`}
+      >
+        {frontmatter.category}
+      </p>
+      <h1 class="font-heading font-medium text-4xl sm:text-5xl leading-tight">
+        {frontmatter.title}
+      </h1>
+      <p class="font-body text-sm text-neutral-500 mt-3">
+        By {frontmatter.author}
+      </p>
+    </header>
+
+    <hr class="border-t border-black/10 mb-12" />
+
+    <aside class="mb-12">
+      <p class="font-body text-xs uppercase tracking-widest text-neutral-400 mb-1">
+        Date of inspiration
+      </p>
+      <p class="font-heading text-lg">{formatted}</p>
+    </aside>
+
+    <hr class="border-t border-black/5 mb-10" />
+
+    <div class="article-content">
+      <slot />
+    </div>
+  </article>
+</Layout>
+
+
+
+<style is:global>
+  :root {
+    --astro-code-foreground: #ffffff;
+    --astro-code-background: #101010;
+    --astro-code-token-constant: #FFC799;
+    --astro-code-token-string: #99FFE4;
+    --astro-code-token-comment: #8B8B8B;
+    --astro-code-token-keyword: #A0A0A0;
+    --astro-code-token-parameter: #ffffff;
+    --astro-code-token-function: #FFC799;
+    --astro-code-token-string-expression: #99FFE4;
+    --astro-code-token-punctuation: #ffffff;
+    --astro-code-token-link: #99FFE4;
+    --astro-code-token-number: #FFC799;
+    --astro-code-token-builtin: #FFC799;
+  }
+
+  .copy-code-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: #888;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .copy-code-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .article-content pre:hover .copy-code-btn {
+    opacity: 1;
+  }
+
+  .copy-code-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ccc;
+  }
+</style>
+
+<script>
+  const CLIPBOARD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M200,32H163.74a47.92,47.92,0,0,0-71.48,0H56A16,16,0,0,0,40,48V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm-72,0a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32Zm72,184H56V48H82.75A47.93,47.93,0,0,0,80,64v8a8,8,0,0,0,8,8h80a8,8,0,0,0,8-8V64a47.93,47.93,0,0,0-2.75-16H200Z"/></svg>';
+  const CHECK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
+
+  document.querySelectorAll(".article-content pre").forEach((pre) => {
+    const btn = document.createElement("button");
+    btn.className = "copy-code-btn";
+    btn.innerHTML = CLIPBOARD_SVG;
+    btn.addEventListener("click", async () => {
+      const code = pre.querySelector("code");
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code.textContent ?? "");
+        btn.innerHTML = CHECK_SVG;
+        setTimeout(() => {
+          btn.innerHTML = CLIPBOARD_SVG;
+        }, 1500);
+      } catch {
+        const text = code.textContent ?? "";
+        const el = document.createElement("textarea");
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        btn.innerHTML = CHECK_SVG;
+        setTimeout(() => {
+          btn.innerHTML = CLIPBOARD_SVG;
+        }, 1500);
+      }
+    });
+    pre.appendChild(btn);
+  });
+</script>

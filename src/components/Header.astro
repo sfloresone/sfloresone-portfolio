@@ -1,19 +1,19 @@
 ---
 const navItems = [
-  { label: "Home", href: "#home" },
-  { label: "Projects", href: "#projects" },
-  { label: "Writing/Thinking", href: "#writing" },
-  { label: "About", href: "#about" },
+  { label: "Home", href: "/#home" },
+  { label: "Projects", href: "/#projects" },
+  { label: "Writing/Thinking", href: "/#writing" },
+  { label: "About", href: "/#about" },
 ];
 ---
 
-<header class="max-w-[96ch] mx-auto px-6 py-8 animate-fade-in">
+<header class="max-w-[96ch] mx-auto px-6 py-8 animate-fade-in" transition:persist>
   <nav class="flex items-center gap-8">
     {
       navItems.map((item, index) => (
         <a
           href={item.href}
-          class="font-sans text-base font-medium tracking-wide animate-fade-in-up hover:opacity-60 transition-opacity"
+          class="font-body text-sm font-medium tracking-wide animate-fade-in-up nav-underline"
           style={`animation-delay: ${(index + 1) * 100}ms`}
         >
           {item.label}

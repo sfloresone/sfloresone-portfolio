@@ -1,0 +1,70 @@
+---
+interface Props {
+  category: string;
+  date: Date;
+  title: string;
+  href: string;
+}
+
+const { category, date, title, href } = Astro.props;
+const formatted = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const iso = date.toISOString().split("T")[0];
+
+const tagStyles: Record<string, { bar: string; text: string }> = {
+  Dev: { bar: "#3b82f6", text: "#2563eb" },
+  Design: { bar: "#ec4899", text: "#db2777" },
+  Life: { bar: "#10b981", text: "#059669" },
+};
+const tag = tagStyles[category] ?? { bar: "#000", text: "#000" };
+---
+
+  <article class="blog-card relative">
+  <div class="card-inner relative z-10 bg-neutral-50 border border-black/15 rounded-sm p-6 transition-all duration-300 shadow-sm">
+    <div class="flex items-center gap-2 text-sm font-body text-neutral-500">
+      <span class="font-medium" style={`color: ${tag.text}`}>{category}</span>
+      <span class="opacity-30 select-none">·</span>
+      <time datetime={iso}>{formatted}</time>
+    </div>
+    <h3 class="font-heading text-xl font-medium mt-3 leading-snug text-black pr-5">
+      {title}
+    </h3>
+    <a
+      href={href}
+      class="inline-block mt-4 font-body text-sm font-medium tracking-wide underline decoration-1 underline-offset-2 transition-opacity hover:opacity-60 text-neutral-500"
+    >
+      Read more &rarr;
+    </a>
+    <div class="tag-bar" style={`background-color: ${tag.bar}`}></div>
+  </div>
+</article>
+
+<style>
+  .blog-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: black;
+    border-radius: 0.125rem;
+    transform: translate(6px, 6px);
+    transition: transform 0.3s ease;
+  }
+
+  .blog-card:hover .card-inner {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+  }
+
+  .blog-card:hover::before {
+    transform: translate(10px, 10px);
+  }
+
+  .tag-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 0 0.125rem 0.125rem 0;
+  }
+</style>

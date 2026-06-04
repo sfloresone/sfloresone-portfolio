@@ -6,20 +6,26 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  markdown: {
+    shikiConfig: {
+      theme: "css-variables",
+    },
+  },
   fonts: [
     {
-      name: "Roundo",
-      cssVariable: "--font-roundo",
-      provider: fontProviders.fontshare(),
-      weights: [400, 500, 700],
-      styles: ["normal"],
+      name: "Libre Baskerville",
+      cssVariable: "--font-libre-baskerville",
+      provider: fontProviders.fontsource(),
+      weights: [400, 700],
+      styles: ["normal", "italic"],
+      subsets: ["latin"],
     },
     {
-      name: "Lora",
-      cssVariable: "--font-lora",
+      name: "Manrope",
+      cssVariable: "--font-manrope",
       provider: fontProviders.fontsource(),
       weights: [400, 500, 600, 700],
-      styles: ["normal", "italic"],
+      styles: ["normal"],
       subsets: ["latin"],
     },
   ],

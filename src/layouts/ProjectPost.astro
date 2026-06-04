@@ -1,0 +1,196 @@
+---
+import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
+import "../styles/global.css";
+import "../styles/article-content.css";
+
+interface Props {
+  frontmatter: {
+    title: string;
+    year: number;
+    color: string;
+    blogSlug: string;
+    description?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+
+const navItems = [
+  { label: "Home", href: "/#home" },
+  { label: "Projects", href: "/#projects" },
+  { label: "Brainwaves.", href: "/#writing" },
+  { label: "About", href: "/#about" },
+];
+---
+
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={frontmatter.description ?? ""} />
+    <title>{frontmatter.title} — Sergio Flores</title>
+    <meta name="theme-color" content={frontmatter.color} />
+    <Font cssVariable="--font-libre-baskerville" preload={[400]} />
+    <Font cssVariable="--font-manrope" preload={[500]} />
+    <ClientRouter />
+  </head>
+  <body class="m-0">
+    <header
+      class="fixed top-0 left-0 right-0 z-50 px-6 py-8"
+      transition:persist
+    >
+      <nav class="max-w-[96ch] mx-auto flex items-center gap-8">
+        {navItems.map((item) => (
+          <a
+            href={item.href}
+            class="font-body text-sm font-medium tracking-wide text-white/80 hover:text-white transition-colors"
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    </header>
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+      <div
+        class="md:w-1/2 min-h-[50vh] md:min-h-screen flex flex-col justify-between p-10 md:p-16 lg:p-20 pt-28 md:pt-32"
+        style={`background-color: ${frontmatter.color}`}
+      >
+        <div>
+          <h1 class="font-heading font-medium text-4xl sm:text-5xl lg:text-6xl leading-tight text-white max-w-md">
+            {frontmatter.title}
+          </h1>
+        </div>
+        <div class="text-white/50 font-body text-sm font-medium tracking-wide">
+          {frontmatter.year}
+        </div>
+      </div>
+
+      <div class="md:w-1/2 min-h-screen bg-[#0a0a0a] text-white p-10 md:p-16 lg:p-20 pt-28 md:pt-32">
+        <div class="article-content max-w-[72ch]">
+          <slot />
+        </div>
+
+        <footer class="mt-16 pt-8 border-t border-white/10">
+          <a
+            href={`/blog/${frontmatter.blogSlug}`}
+            class="inline-flex items-center gap-2 font-heading text-lg font-medium text-white/70 hover:text-white transition-colors"
+          >
+            Read the full blog post &rarr;
+          </a>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --astro-code-foreground: #ffffff;
+    --astro-code-background: #101010;
+    --astro-code-token-constant: #FFC799;
+    --astro-code-token-string: #99FFE4;
+    --astro-code-token-comment: #8B8B8B;
+    --astro-code-token-keyword: #A0A0A0;
+    --astro-code-token-parameter: #ffffff;
+    --astro-code-token-function: #FFC799;
+    --astro-code-token-string-expression: #99FFE4;
+    --astro-code-token-punctuation: #ffffff;
+    --astro-code-token-link: #99FFE4;
+    --astro-code-token-number: #FFC799;
+    --astro-code-token-builtin: #FFC799;
+  }
+
+  .article-content a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .article-content blockquote {
+    border-left-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .article-content th {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+  }
+
+  .article-content th,
+  .article-content td {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .article-content code {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ccc;
+  }
+
+  .article-content hr {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .copy-code-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: #888;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .copy-code-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .article-content pre:hover .copy-code-btn {
+    opacity: 1;
+  }
+
+  .copy-code-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ccc;
+  }
+</style>
+
+<script>
+  const CLIPBOARD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M200,32H163.74a47.92,47.92,0,0,0-71.48,0H56A16,16,0,0,0,40,48V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm-72,0a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32Zm72,184H56V48H82.75A47.93,47.93,0,0,0,80,64v8a8,8,0,0,0,8,8h80a8,8,0,0,0,8-8V64a47.93,47.93,0,0,0-2.75-16H200Z"/></svg>';
+  const CHECK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
+
+  document.querySelectorAll(".article-content pre").forEach((pre) => {
+    const btn = document.createElement("button");
+    btn.className = "copy-code-btn";
+    btn.innerHTML = CLIPBOARD_SVG;
+    btn.addEventListener("click", async () => {
+      const code = pre.querySelector("code");
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code.textContent ?? "");
+        btn.innerHTML = CHECK_SVG;
+        setTimeout(() => { btn.innerHTML = CLIPBOARD_SVG; }, 1500);
+      } catch {
+        const text = code.textContent ?? "";
+        const el = document.createElement("textarea");
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        btn.innerHTML = CHECK_SVG;
+        setTimeout(() => { btn.innerHTML = CLIPBOARD_SVG; }, 1500);
+      }
+    });
+    pre.appendChild(btn);
+  });
+</script>

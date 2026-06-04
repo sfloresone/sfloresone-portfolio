@@ -1,5 +1,36 @@
 ---
+import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
+import BlogPreview from "../components/BlogPreview.astro";
+import ProjectPreview from "../components/ProjectPreview.astro";
+
+const posts = await getCollection("blog");
+const samplePosts = posts.map((p) => ({
+  category: p.data.category,
+  date: p.data.date,
+  title: p.data.title,
+  href: `/blog/${p.id}`,
+}));
+
+const projects = [
+  {
+    title: "sflores.one",
+    tags: ["Astro", "Tailwind", "Cloudflare"],
+    summary: "Mi rincón personal en la web. Este mismo portfolio, construido con Astro y Tailwind, desplegado en Cloudflare con scroll-snap y View Transitions.",
+    projectHref: "/project/sflores-one",
+    blogHref: "/blog/test-post",
+    liveHref: "https://sflores.one",
+    githubHref: "https://github.com/sfloresone/sfloresone-portfolio",
+  },
+  {
+    title: "Chaski",
+    tags: ["Rust", "CLI", "Queues"],
+    summary: "Procesador de colas de mensajes en Rust con enfoque en rendimiento y zero-cost abstractions. Diseñado para alto throughput.",
+    projectHref: "#",
+    blogHref: "/blog/test-post",
+    githubHref: "https://github.com/sfloresone/chaski",
+  },
+];
 
 const socialLinks = [
   { label: "X", href: "https://x.com/sfloresone" },
@@ -12,16 +43,16 @@ const socialLinks = [
 
 <Layout title="Sergio Flores">
   <section id="home" class="min-h-screen bg-white text-black">
-    <div class="max-w-[72ch] mx-auto px-6 pt-32 pb-16">
+    <div class="max-w-[85ch] mx-auto px-6 pt-32 pb-16">
       <h1 class="font-heading font-medium text-5xl sm:text-6xl lg:text-7xl mb-4 animate-fade-in-up">
         Sergio Flores
       </h1>
 
-      <p class="font-sans font-medium uppercase tracking-widest text-sm sm:text-base mb-16 animate-fade-in-up delay-200">
+      <p class="font-heading uppercase tracking-widest text-sm sm:text-base mb-16 animate-fade-in-up delay-200 text-neutral-500 underline decoration-neutral-500 underline-offset-4 decoration-1">
         ENGINEERING &amp; PRODUCT
       </p>
 
-      <p class="font-sans text-lg sm:text-xl leading-relaxed animate-fade-in-up delay-300">
+      <p class="font-body text-lg sm:text-xl leading-relaxed animate-fade-in-up delay-300">
         Soy desarrollador de software especializado en construir experiencias
         digitales rápidas, accesibles y con atención al detalle. Me mueve
         crear proyectos donde el código no solo funciona, sino que se siente
@@ -36,7 +67,7 @@ const socialLinks = [
               <>
                 {link.label === "Email" ? (
                   <button
-                    class="font-sans font-medium tracking-wide animate-fade-in hover:opacity-60 transition-opacity border-none bg-transparent cursor-pointer p-0"
+                    class="font-body font-medium tracking-wide animate-fade-in hover:opacity-60 transition-opacity border-none bg-transparent cursor-pointer p-0"
                     style={`animation-delay: ${500 + index * 100}ms`}
                     data-copy
                     data-email="hello@sflores.one"
@@ -47,7 +78,7 @@ const socialLinks = [
                 ) : (
                   <a
                     href={link.href}
-                    class="font-sans font-medium tracking-wide animate-fade-in hover:opacity-60 transition-opacity"
+                    class="font-body font-medium tracking-wide animate-fade-in hover:opacity-60 transition-opacity"
                     style={`animation-delay: ${500 + index * 100}ms`}
                     target={link.label === "CV" ? undefined : "_blank"}
                     rel={link.label === "CV" ? undefined : "noopener noreferrer"}
@@ -74,19 +105,41 @@ const socialLinks = [
     id="projects"
     class="snap-start min-h-screen bg-black text-white flex items-center justify-center"
   >
-    <div class="max-w-[72ch] mx-auto px-6 py-24">
-      <h2 class="font-heading font-medium text-4xl mb-4">Projects</h2>
-      <p class="font-sans text-lg">Coming soon.</p>
+    <div class="max-w-[85ch] mx-auto px-6 py-24 w-full">
+      <h2 class="font-heading font-medium text-4xl mb-2">Projects</h2>
+      <p class="font-body text-base text-neutral-400 italic mb-16">
+        Things I&rsquo;ve built (or am still building).
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        {projects.map((p) => (
+          <ProjectPreview
+            tags={p.tags}
+            title={p.title}
+            summary={p.summary}
+            projectHref={p.projectHref}
+            blogHref={p.blogHref}
+            liveHref={p.liveHref}
+            githubHref={p.githubHref}
+          />
+        ))}
+      </div>
     </div>
   </section>
 
   <section
     id="writing"
-    class="snap-start min-h-screen bg-white text-black flex items-center justify-center"
+    class="snap-start min-h-screen bg-white text-black flex items-center"
   >
-    <div class="max-w-[72ch] mx-auto px-6 py-24">
-      <h2 class="font-heading font-medium text-4xl mb-4">Writing/Thinking</h2>
-      <p class="font-sans text-lg">Coming soon.</p>
+    <div class="max-w-[85ch] mx-auto px-6 py-24 w-full">
+      <h2 class="font-heading font-medium text-4xl mb-2">Brainwaves.</h2>
+      <p class="font-body text-base text-neutral-500 italic mb-16">
+        Ideas that didn&rsquo;t know where else to go.
+      </p>
+      <div class="grid gap-8">
+        {samplePosts.map((post) => (
+          <BlogPreview category={post.category} date={post.date} title={post.title} href={post.href} />
+        ))}
+      </div>
     </div>
   </section>
 
@@ -94,9 +147,9 @@ const socialLinks = [
     id="about"
     class="snap-start min-h-screen bg-black text-white flex items-center justify-center"
   >
-    <div class="max-w-[72ch] mx-auto px-6 py-24">
+    <div class="max-w-[85ch] mx-auto px-6 py-24">
       <h2 class="font-heading font-medium text-4xl mb-4">About</h2>
-      <p class="font-sans text-lg">Coming soon.</p>
+      <p class="font-body text-lg">Coming soon.</p>
     </div>
   </section>
 
@@ -109,12 +162,12 @@ const socialLinks = [
   </button>
 </Layout>
 
-<script>
+<script type="module">
   const hero = document.getElementById("home");
   const topBtn = document.getElementById("back-to-top");
 
   if (hero && topBtn) {
-    const show = (visible) => {
+    const show = (visible = false) => {
       topBtn.classList.toggle("invisible", !visible);
       topBtn.classList.toggle("opacity-100", visible);
     };
@@ -127,35 +180,37 @@ const socialLinks = [
     topBtn.addEventListener("click", () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
-  }
 
-  if (topBtn) {
-    new IntersectionObserver((entries) => {
+    const sectionObserver = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           const isDark = entry.target.classList.contains("bg-black");
           topBtn.classList.toggle("invert", isDark);
-          document
-            .querySelector('meta[name="theme-color"]')
-            .setAttribute("content", isDark ? "#000000" : "#ffffff");
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", isDark ? "#000000" : "#ffffff");
         }
       }
-    }, { threshold: 0.4 }).observe(document.querySelectorAll("section[id]"));
+    }, { threshold: 0.4 });
+
+    document.querySelectorAll("section[id]").forEach(
+      (s) => sectionObserver.observe(s)
+    );
   }
 
   document.querySelectorAll("[data-copy]").forEach((el) => {
     el.addEventListener("click", async () => {
+      const email = (el).getAttribute("data-email") ?? "";
       try {
-        await navigator.clipboard.writeText(el.dataset.email);
-        el.querySelector(".copy-label").classList.add("hidden");
-        el.querySelector(".copy-check").classList.remove("hidden");
+        await navigator.clipboard.writeText(email);
+        el.querySelector(".copy-label")?.classList.add("hidden");
+        el.querySelector(".copy-check")?.classList.remove("hidden");
         setTimeout(() => {
-          el.querySelector(".copy-check").classList.add("hidden");
-          el.querySelector(".copy-label").classList.remove("hidden");
+          el.querySelector(".copy-check")?.classList.add("hidden");
+          el.querySelector(".copy-label")?.classList.remove("hidden");
         }, 2500);
       } catch {
         const fallback = document.createElement("textarea");
-        fallback.value = el.dataset.email;
+        fallback.value = email;
         document.body.appendChild(fallback);
         fallback.select();
         document.execCommand("copy");
