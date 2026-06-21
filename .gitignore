@@ -1,4 +1,6 @@
 AGENTS.md
+.playwright-mcp
+.claude
 
 # build output
 dist/

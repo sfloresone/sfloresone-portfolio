@@ -2,7 +2,7 @@
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
-import "../styles/article-content.css";
+import Header from "../components/Header.astro";
 
 interface Props {
   frontmatter: {
@@ -15,43 +15,22 @@ interface Props {
 }
 
 const { frontmatter } = Astro.props;
-
-const navItems = [
-  { label: "Home", href: "/#home" },
-  { label: "Projects", href: "/#projects" },
-  { label: "Brainwaves.", href: "/#writing" },
-  { label: "About", href: "/#about" },
-];
 ---
 
 <html lang="es" class="scroll-smooth">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={frontmatter.description ?? ""} />
     <title>{frontmatter.title} — Sergio Flores</title>
     <meta name="theme-color" content={frontmatter.color} />
-    <Font cssVariable="--font-libre-baskerville" preload={[400]} />
-    <Font cssVariable="--font-manrope" preload={[500]} />
+    <Font cssVariable="--font-libre-baskerville" preload={[{ weight: 400 }]} />
+    <Font cssVariable="--font-manrope" preload={[{ weight: 500 }]} />
     <ClientRouter />
   </head>
-  <body class="m-0">
-    <header
-      class="fixed top-0 left-0 right-0 z-50 px-6 py-8"
-      transition:persist
-    >
-      <nav class="max-w-[96ch] mx-auto flex items-center gap-8">
-        {navItems.map((item) => (
-          <a
-            href={item.href}
-            class="font-body text-sm font-medium tracking-wide text-white/80 hover:text-white transition-colors"
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
-    </header>
+  <body class="m-0" data-theme="dark">
+    <Header />
 
     <div class="flex flex-col md:flex-row min-h-screen">
       <div

@@ -1,14 +1,15 @@
 ---
 const navItems = [
-  { label: "Home", href: "/#home" },
+  { label: "Home", href: "/" },
+  { label: "Work", href: "/#work" },
   { label: "Projects", href: "/#projects" },
   { label: "Writing/Thinking", href: "/#writing" },
   { label: "About", href: "/#about" },
 ];
 ---
 
-<header class="max-w-[96ch] mx-auto px-6 py-8 animate-fade-in" transition:persist>
-  <nav class="flex items-center gap-8">
+<header class="px-6 py-8 animate-fade-in" transition:persist transition:name="site-header">
+  <nav class="max-w-[96ch] mx-auto flex items-center gap-8">
     {
       navItems.map((item, index) => (
         <a
@@ -22,3 +23,43 @@ const navItems = [
     }
   </nav>
 </header>
+
+<style>
+  .hdr-dark a {
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .hdr-dark a:hover {
+    color: white;
+  }
+</style>
+
+<script>
+  function updateTheme() {
+    const header = document.querySelector<HTMLElement>("header");
+    if (!header) return;
+    const isDark = document.body.dataset.theme === "dark";
+    header.classList.toggle("hdr-dark", isDark);
+  }
+
+  function stripAnimations() {
+    const header = document.querySelector<HTMLElement>("header");
+    if (!header) return;
+    header.classList.remove("animate-fade-in");
+    header.querySelectorAll<HTMLElement>("a").forEach((a) => {
+      a.classList.remove("animate-fade-in-up");
+      a.style.animationDelay = "";
+    });
+  }
+
+  // Llamada inmediata para navegación directa (sin View Transition)
+  updateTheme();
+
+  document.addEventListener("astro:page-load", () => {
+    updateTheme();
+    stripAnimations();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") stripAnimations();
+  });
+</script>
