@@ -1,21 +1,14 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
-import BlogPreview from "../components/BlogPreview.astro";
 import ProjectPreview from "../components/ProjectPreview.astro";
 import HoverCard from "../components/HoverCard.astro";
 import WorkExperience from "../components/WorkExperience.astro";
 import { featuredProjects } from "../data/projects";
 import { workExperiences } from "../data/work";
 import { socialLinks } from "../data/social";
+import { education, skills } from "../data/about";
+import SkillTag from "../components/SkillTag.astro";
 
-const posts = await getCollection("blog");
-const samplePosts = posts.map((p) => ({
-  category: p.data.category,
-  date: p.data.date,
-  title: p.data.title,
-  href: `/blog/${p.id}`,
-}));
 ---
 
 <Layout title="Sergio Flores">
@@ -30,8 +23,9 @@ const samplePosts = posts.map((p) => ({
       </p>
 
       <p data-reveal style="transition-delay:160ms" class="font-body text-base sm:text-lg leading-relaxed">
-        Computer Science student at <HoverCard href="https://www.upm.es" label="Universidad Politécnica de Madrid." image="/previews/upm-banner.webp" siteName="upm.es" lines={["Universidad Politécnica de Madrid", "Escuela Técnica Superior de Ingeniería de Sistemas Informáticos"]} />
+        Computer Science student at <HoverCard href="https://www.42madrid.com/" label="42 Madrid." image="/previews/42campus-madrid.webp" siteName="42madrid.com" lines={["42 Madrid", "Fundación Telefónica"]} />
       </p>
+      
       <p data-reveal style="transition-delay:220ms" class="font-body text-base sm:text-lg leading-relaxed mt-4">
         Methodical by nature — I care about how software is built as much as what it does.
       </p>
@@ -117,7 +111,7 @@ const samplePosts = posts.map((p) => ({
           Things I&rsquo;ve built (or am still building).
         </p>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div class="grid gap-6">
         {featuredProjects.map((p, i) => (
           <div data-reveal style={`transition-delay:${i * 80}ms`}>
             <ProjectPreview
@@ -135,49 +129,80 @@ const samplePosts = posts.map((p) => ({
     </div>
   </section>
 
-  <section id="writing" class="bg-white text-black">
+  <section id="about" class="bg-black text-white">
     <div class="max-w-[85ch] mx-auto px-6 py-32 w-full">
-      <div data-reveal>
-        <h2 class="font-heading font-medium text-4xl mb-2">Brainwaves.</h2>
-        <p class="font-body text-base text-neutral-500 italic mb-16">
-          Ideas that didn&rsquo;t know where else to go.
-        </p>
-      </div>
-      <div class="grid gap-8">
-        {samplePosts.map((post, i) => (
-          <div data-reveal style={`transition-delay:${i * 80}ms`}>
-            <BlogPreview category={post.category} date={post.date} title={post.title} href={post.href} />
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
 
-  <section id="about" class="min-h-screen bg-black text-white flex items-start">
-    <div class="max-w-[85ch] mx-auto px-6 py-32 w-full">
       <div data-reveal>
-        <h2 class="font-heading font-medium text-4xl mb-8">About</h2>
-        <p class="font-body text-lg leading-relaxed">
-          Computer Science student at
-          <HoverCard
-            href="https://www.upm.es"
-            label="Universidad Politécnica de Madrid."
-            image="/previews/upm-banner.webp"
-            siteName="upm.es"
-            lines={["Universidad Politécnica de Madrid", "Escuela Técnica Superior de Ingeniería de Sistemas Informáticos"]}
-          />
-        </p>
-        <p class="font-body text-lg leading-relaxed mt-5">
-          Currently building two production-grade AI products at
-          <HoverCard
-            href="https://zaltor.com"
-            label="Zaltor."
-            image="/previews/banner-zaltor.jpg"
-            siteName="zaltor.com"
-            lines={["Zaltor — Software Distribution", "Servicios Gestionados, Ciberseguridad, Backup y MSP."]}
-          />
+        <h2 class="font-heading font-medium text-4xl mb-16">About</h2>
+      </div>
+
+      <!-- TODO: replace with real bio -->
+      <div data-reveal class="mb-16">
+        <p class="font-body text-base text-white/70 leading-[1.85]">
+          I'll write something when I feel inspired :(.
         </p>
       </div>
+
+      <div class="border-t border-white/10 mb-16"></div>
+
+      <!-- Education -->
+      <div data-reveal class="mb-16">
+        <span class="font-bold text-sm text-emerald-400/70 block mb-10">Education</span>
+        <div class="flex flex-col gap-10">
+          {education.map((entry) => (
+            <div>
+              <div class="flex items-baseline justify-between gap-4">
+                <span class="text-lg font-medium text-white/60">{entry.comment}</span>
+                <span class="text-sm text-white/30 tabular-nums shrink-0">{entry.period}</span>
+              </div>
+              <p class="font-body text-sm text-white/50 mt-1">{entry.institution}</p>
+              <p class="font-body text-sm text-white/35 italic mt-2">{entry.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="border-t border-white/10 mb-16"></div>
+
+      <!-- Skills -->
+      <div data-reveal>
+        <span class="font-bold text-sm text-emerald-400/70 block mb-10">Skills</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-16 gap-y-10">
+          <div>
+            <span class="text-sm text-white/65 block mb-3">/languages</span>
+            <div class="flex flex-wrap gap-2">
+              {skills.languages.map((s) => (
+                <SkillTag name={s} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <span class="text-sm text-white/65 block mb-3">/frameworks</span>
+            <div class="flex flex-wrap gap-2">
+              {skills.frameworks.map((s) => (
+                <SkillTag name={s} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <span class="text-sm text-white/65 block mb-3">/tools</span>
+            <div class="flex flex-wrap gap-2">
+              {skills.tools.map((s) => (
+                <SkillTag name={s} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <span class="text-sm text-white/65 block mb-3">/databases</span>
+            <div class="flex flex-wrap gap-2">
+              {skills.databases.map((s) => (
+                <SkillTag name={s} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 

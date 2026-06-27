@@ -1,15 +1,18 @@
 ---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
 interface Role {
   title: string;
   type: string;
   period: string;
-  bullets: string[];
+  description: string;
   current?: boolean;
 }
 
 interface Props {
   company: string;
-  logo: string;
+  logo: string | ImageMetadata;
   url: string;
   location: string;
   totalPeriod: string;
@@ -23,12 +26,14 @@ const { company, logo, url, totalPeriod, tags, roles } = Astro.props;
 <div class="flex gap-6">
   <div class="shrink-0 w-10 pt-1">
     <a href={url} target="_blank" rel="noopener noreferrer">
-      <img src={logo} alt={`${company} logo`} class="w-9 h-9 object-contain" />
+      {typeof logo === 'string'
+        ? <img src={logo} alt={`${company} logo`} width="36" height="36" class="w-9 h-9 object-contain" loading="lazy" />
+        : <Image src={logo} alt={`${company} logo`} width={36} height={36} class="w-9 h-9 object-contain" />
+      }
     </a>
   </div>
 
   <div class="flex-1 min-w-0">
-    <!-- Company header -->
     <div class="flex items-baseline justify-between gap-4">
       <a
         href={url}
@@ -38,10 +43,9 @@ const { company, logo, url, totalPeriod, tags, roles } = Astro.props;
       >
         {company}
       </a>
-      <span class="font-body text-sm text-neutral-400 shrink-0 tabular-nums">{totalPeriod}</span>
+      <span class="font-body text-sm text-neutral-500 shrink-0 tabular-nums">{totalPeriod}</span>
     </div>
 
-    <!-- Tags -->
     {tags && tags.length > 0 && (
       <div class="flex flex-wrap gap-2 mt-3">
         {tags.map((tag) => (
@@ -52,29 +56,30 @@ const { company, logo, url, totalPeriod, tags, roles } = Astro.props;
       </div>
     )}
 
-    <!-- Roles -->
-    <div class="mt-6 flex flex-col gap-6">
+    <div class="mt-6 flex flex-col gap-8">
       {roles.map((role) => (
         <div>
-          <div class="flex items-baseline justify-between gap-4">
-            <span class="font-body text-base font-semibold text-black">
-              {role.title}
-            </span>
-            <span class="font-body text-sm text-neutral-400 shrink-0 tabular-nums">{role.period}</span>
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <span class="font-body text-base font-semibold text-black block">
+                {role.title}
+              </span>
+              <span class="font-body text-[11px] font-medium bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-sm uppercase tracking-wider inline-block mt-1.5">
+                {role.type}
+              </span>
+            </div>
+            <span class="font-body text-sm text-neutral-500 shrink-0 tabular-nums mt-0.5">{role.period}</span>
           </div>
-          <span class="font-body text-xs uppercase tracking-[0.15em] text-neutral-400 mt-0.5 block">
-            {role.type}
-          </span>
-          <ul class="mt-3 flex flex-col gap-2">
-            {role.bullets.map((bullet) => (
-              <li class="font-body text-sm text-neutral-600 leading-relaxed flex gap-2.5 items-baseline">
-                <span class="text-neutral-400 shrink-0">·</span>
-                <span>{bullet}</span>
-              </li>
-            ))}
-          </ul>
+          <p class="role-description font-body text-base text-neutral-700 leading-[1.85] mt-5" set:html={role.description} />
         </div>
       ))}
     </div>
   </div>
 </div>
+
+<style>
+  .role-description :global(strong) {
+    font-weight: 600;
+    color: #171717;
+  }
+</style>

@@ -20,8 +20,8 @@ export const featuredProjects: Project[] = [
   },
   {
     title: "42-cursus",
-    tags: ["Rust", "CLI", "Queues"],
-    summary: "Procesador de colas de mensajes en Rust con enfoque en rendimiento y zero-cost abstractions. Diseñado para alto throughput.",
+    tags: ["C", "Python", "Makefile"],
+    summary: "Procesador de colas de mensajes en Rust con enfoque en rendimiento y zero-cost abstractions.",
     projectHref: "#",
     blogHref: "/blog/42-cursus",
     githubHref: "https://github.com/sfloresone/42-cursus",
