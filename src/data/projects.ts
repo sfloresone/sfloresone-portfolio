@@ -21,8 +21,8 @@ export const featuredProjects: Project[] = [
   {
     title: "42-cursus",
     tags: ["C", "Python", "Makefile"],
-    summary: "Procesador de colas de mensajes en Rust con enfoque en rendimiento y zero-cost abstractions.",
-    projectHref: "#",
+    summary: "Peer-to-peer, gamified learning through real technical challenges. The repository with every project I build at 42 Madrid.",
+    projectHref: "https://github.com/sfloresone/42-cursus",
     blogHref: "/blog/42-cursus",
     githubHref: "https://github.com/sfloresone/42-cursus",
   },
@@ -31,7 +31,7 @@ export const featuredProjects: Project[] = [
     tags: ["Python", "Algorithms", "Data Structures"],
     summary: "Maze generator and solver library implemented in Python exposing a simple API.",
     projectHref: "#",
-    blogHref: "/blog/a-maze-ing",
+    blogHref: "/blog/a_maze_ing",
     githubHref: "https://github.com/sfloresone/a_maze_ing",
   },
   {

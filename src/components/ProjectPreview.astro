@@ -10,6 +10,8 @@ interface Props {
 }
 
 const { tags, title, summary, projectHref, liveHref, githubHref } = Astro.props;
+
+const isExternalProject = projectHref.startsWith("http");
 ---
 
 <article class="project-card relative">
@@ -55,6 +57,8 @@ const { tags, title, summary, projectHref, liveHref, githubHref } = Astro.props;
           <a
             href={projectHref}
             class="font-body text-sm font-medium tracking-wide underline decoration-1 underline-offset-2 transition-opacity hover:opacity-60 text-white/50"
+            target={isExternalProject ? "_blank" : undefined}
+            rel={isExternalProject ? "noopener noreferrer" : undefined}
           >
             Read more &rarr;
           </a>

@@ -1,6 +1,6 @@
 ---
-import { Image } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
+import TechIcon from "./TechIcon.astro";
+import Tooltip from "./Tooltip.astro";
 
 interface Role {
   title: string;
@@ -8,77 +8,77 @@ interface Role {
   period: string;
   description: string;
   current?: boolean;
+  tags?: string[];
 }
 
 interface Props {
   company: string;
-  logo: string | ImageMetadata;
   url: string;
   location: string;
-  totalPeriod: string;
-  tags?: string[];
   roles: Role[];
 }
 
-const { company, logo, url, totalPeriod, tags, roles } = Astro.props;
+const { company, url, location, roles } = Astro.props;
 ---
 
-<div class="flex gap-6">
-  <div class="shrink-0 w-10 pt-1">
-    <a href={url} target="_blank" rel="noopener noreferrer">
-      {typeof logo === 'string'
-        ? <img src={logo} alt={`${company} logo`} width="36" height="36" class="w-9 h-9 object-contain" loading="lazy" />
-        : <Image src={logo} alt={`${company} logo`} width={36} height={36} class="w-9 h-9 object-contain" />
-      }
-    </a>
-  </div>
+<div class="relative">
+  <!-- Vertical line -->
+  <div class="absolute left-[5px] top-[10px] bottom-3 w-px bg-neutral-200"></div>
 
-  <div class="flex-1 min-w-0">
-    <div class="flex items-baseline justify-between gap-4">
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="font-heading text-xl font-medium text-black hover:opacity-60 transition-opacity"
-      >
-        {company}
-      </a>
-      <span class="font-body text-sm text-neutral-500 shrink-0 tabular-nums">{totalPeriod}</span>
-    </div>
-
-    {tags && tags.length > 0 && (
-      <div class="flex flex-wrap gap-2 mt-3">
-        {tags.map((tag) => (
-          <span class="font-body text-xs font-medium bg-black text-white px-2.5 py-1 rounded-sm">
-            {tag}
-          </span>
-        ))}
-      </div>
-    )}
-
-    <div class="mt-6 flex flex-col gap-8">
-      {roles.map((role) => (
-        <div>
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <span class="font-body text-base font-semibold text-black block">
-                {role.title}
-              </span>
-              <span class="font-body text-[11px] font-medium bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-sm uppercase tracking-wider inline-block mt-1.5">
-                {role.type}
-              </span>
-            </div>
-            <span class="font-body text-sm text-neutral-500 shrink-0 tabular-nums mt-0.5">{role.period}</span>
+  {roles.map((role) => (
+    <div class="relative flex gap-7 pb-10 last:pb-0">
+      <!-- Dot -->
+      <div class="shrink-0 mt-[6px] z-10">
+        {role.current ? (
+          <div class="relative w-[11px] h-[11px]">
+            <div class="dot-pulse absolute inset-0"></div>
+            <div class="relative w-[11px] h-[11px] rounded-full bg-[#22c55e]"></div>
           </div>
-          <p class="role-description font-body text-base text-neutral-700 leading-[1.85] mt-5" set:html={role.description} />
+        ) : (
+          <div class="w-[11px] h-[11px] rounded-full bg-neutral-300"></div>
+        )}
+      </div>
+
+      <!-- Content -->
+      <div class="flex-1 min-w-0">
+        <!-- Title row -->
+        <div class="flex items-baseline justify-between gap-4">
+          <div class="flex items-baseline gap-2 flex-wrap">
+            <span class="font-body text-base font-semibold text-[#111111]">{role.title}</span>
+            <span class="text-neutral-300 select-none">·</span>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-body text-base text-neutral-500 hover:text-black transition-colors"
+            >{company}</a>
+          </div>
+          <span class="font-body text-sm font-medium tabular-nums shrink-0 text-[#1a1a1a]">{role.period}</span>
         </div>
-      ))}
+
+        <!-- Location + type -->
+        <p class="font-body text-sm text-neutral-500 mt-0.5">{location}, {role.type}</p>
+
+        <!-- Description -->
+        <p class="font-body text-base text-[#3a3a3a] leading-[1.8] mt-4" set:html={role.description} />
+
+        <!-- Tech icons -->
+        {role.tags && role.tags.length > 0 && (
+          <div class="flex items-center gap-4 mt-5">
+            {role.tags.map((tag) => (
+              <Tooltip label={tag} variant="dark">
+                <TechIcon name={tag} class="w-5 h-5" />
+              </Tooltip>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
+  ))}
 </div>
 
 <style>
-  .role-description :global(strong) {
+  p :global(strong) {
     font-weight: 600;
     color: #171717;
   }
