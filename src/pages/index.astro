@@ -7,7 +7,7 @@ import WorkExperience from "../components/WorkExperience.astro";
 import { featuredProjects } from "../data/projects";
 import { workExperiences } from "../data/work";
 import { socialLinks } from "../data/social";
-import { education, skills } from "../data/about";
+import { skills } from "../data/about";
 import TechIcon from "../components/TechIcon.astro";
 import Tooltip from "../components/Tooltip.astro";
 import mascotImage from "../assets/mascot-3d.png";
@@ -85,10 +85,11 @@ const techStack = [
             </span>
             <span class="copy-check hidden text-xs font-body font-medium">✓</span>
           </button>
-          <!-- CV -->
+          <!-- CV 
           <a href="/cv" aria-label="CV" class="text-black/60 hover:text-black transition-colors">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
           </a>
+          -->
         </div>
 
         <div class="font-bold text-base">
@@ -179,23 +180,6 @@ const techStack = [
         </p>
       </div>
 
-      <div class="border-t border-white/10 mb-16"></div>
-
-      <!-- Education -->
-      <div data-reveal class="mb-16">
-        <span class="font-body text-sm text-white/35 block mb-8">/education</span>
-        <div class="flex flex-col gap-6">
-          {education.map((entry) => (
-            <div class="flex items-start justify-between gap-6">
-              <div>
-                <span class="font-body text-base font-medium text-white block">{entry.comment}</span>
-                <span class="font-body text-sm text-white/45 mt-1 block">{entry.institution}</span>
-              </div>
-              <span class="font-body text-sm text-white/30 shrink-0 tabular-nums mt-0.5">{entry.period}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
 
     </div>

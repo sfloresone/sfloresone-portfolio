@@ -37,8 +37,8 @@ export const featuredProjects: Project[] = [
   {
     title: "Forahome",
     tags: ["Java", "Astro", "PostgreSQL", "Docker"],
-    summary: "App iOS para procesamiento de imagen en tiempo real con modelos CoreML on-device. Sin latencia de red.",
-    projectHref: "#",
+    summary: "Higher Degree final project. A platform to request home services: plumbers, electricians, etc... in a simple and direct way.",
+    projectHref: "https://github.com/talechto/forahome-backend",
     blogHref: "/blog/forahome",
     liveHref: "https://forahome.one",
     githubHref: "https://github.com/talechto/forahome-web-client",
