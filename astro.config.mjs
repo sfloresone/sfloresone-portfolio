@@ -2,15 +2,19 @@
 import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 
+import cloudflare from "@astrojs/cloudflare";
+
 export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+
   markdown: {
     shikiConfig: {
       theme: "css-variables",
     },
   },
+
   fonts: [
     {
       name: "Libre Baskerville",
@@ -29,4 +33,6 @@ export default defineConfig({
       subsets: ["latin"],
     },
   ],
+
+  adapter: cloudflare(),
 });
