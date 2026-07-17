@@ -2,14 +2,10 @@
 import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 
-import cloudflare from "@astrojs/cloudflare";
-
 export default defineConfig({
-  output: "static",
   vite: {
     plugins: [tailwindcss()],
   },
-  adapter: cloudflare({ mode: "directory" }),
   markdown: {
     shikiConfig: {
       theme: "css-variables",
