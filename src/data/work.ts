@@ -20,14 +20,14 @@ export const workExperiences: WorkEntry[] = [
     url: "https://zaltor.com",
     location: "Spain",
     roles: [
-      // {
-      //   title: "Junior Software Engineer",
-      //   type: "Full-time",
-      //   period: "Jul. 2026 – Present",
-      //   current: true,
-      //   description: `Following the internship, continued at Zaltor full-time to take the work further. Leading the <strong>development, design, and deployment</strong> of multiple AI products: some internal, some public-facing. The stack spans <strong>React and Astro</strong> on the frontend, paired with backend services and <strong>deployment pipelines</strong>. Still shipping features, maintaining production systems, and iterating fast — all while keeping the architecture clean and reliable.`,
-      //   tags: ["TypeScript", "React", "Astro", "Python", "Docker"],
-      // },
+      {
+       title: "Junior Software Engineer",
+        type: "Full-time",
+        period: "Jul. 2026 – Present",
+        current: true,
+        description: `Following the internship, continued at Zaltor full-time to take the work further. Leading the <strong>development, design, and deployment</strong> of multiple AI products: some internal, some public-facing. The stack spans <strong>React and Astro</strong> on the frontend, paired with backend services and <strong>deployment pipelines</strong>. Still shipping features, maintaining production systems, and iterating fast — all while keeping the architecture clean and reliable.`,
+        tags: ["TypeScript", "React", "Astro", "Python", "Docker"],
+       },
       {
         title: "Software Developer Intern",
         type: "Internship",

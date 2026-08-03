@@ -8,9 +8,16 @@ import Footer from "../components/Footer.astro";
 interface Props {
   title: string;
   description?: string;
+  footer?: boolean;
+  themeColor?: string;
 }
 
-const { title, description = "Personal portfolio" } = Astro.props;
+const {
+  title,
+  description = "Personal portfolio",
+  footer = true,
+  themeColor = "#ffffff",
+} = Astro.props;
 ---
 
 <html lang="es" class="scroll-smooth">
@@ -20,17 +27,17 @@ const { title, description = "Personal portfolio" } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content={themeColor} />
     <ClientRouter />
     <Font cssVariable="--font-libre-baskerville" preload={[{ weight: 400 }]} />
     <Font cssVariable="--font-manrope" preload={[{ weight: 500 }]} />
   </head>
-  <body>
+  <body class="min-h-screen flex flex-col">
     <Header />
-    <main>
+    <main class="flex-1 flex flex-col">
       <slot />
     </main>
-    <Footer />
+    {footer && <Footer />}
   </body>
 </html>
 

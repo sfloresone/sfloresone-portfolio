@@ -17,9 +17,10 @@ import Git          from './icons/Git.astro';
 import GitHub       from './icons/GitHub.astro';
 import Docker       from './icons/Docker.astro';
 import Linux        from './icons/Linux.astro';
-import Postman      from './icons/Postman.astro';
+import Cloudflare   from './icons/Cloudflare.astro';
 import IntelliJ     from './icons/IntelliJ.astro';
 import VSCode       from './icons/VSCode.astro';
+import Supabase     from './icons/Supabase.astro';
 
 interface Props { name: string; class?: string; }
 const { name, class: className = 'w-4 h-4' } = Astro.props;
@@ -43,9 +44,10 @@ const icons: Record<string, any> = {
   GitHub,
   Docker,
   Linux,
-  Postman,
+  Cloudflare,
   'IntelliJ IDEA': IntelliJ,
   VSCode,
+  Supabase,
 };
 
 const Icon = icons[name];

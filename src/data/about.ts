@@ -22,7 +22,7 @@ export const education: EducationEntry[] = [
 
 export const skills = {
   languages:  ["Java", "Python", "C", "TypeScript", "JavaScript", "SQL"],
-  databases:  ["PostgreSQL", "MySQL", "SQLite"],
+  databases:  ["PostgreSQL", "MySQL", "SQLite", "Supabase"],
   frameworks: ["Spring Boot", "Astro", "Node.js", "Bun", "Hono", "React"],
-  tools:      ["Git", "GitHub", "Makefile", "Docker", "Linux", "Postman", "IntelliJ IDEA", "VSCode"],
+  tools:      ["Git", "GitHub", "Makefile", "Docker", "Linux", "Cloudflare", "IntelliJ IDEA", "VSCode"],
 };
