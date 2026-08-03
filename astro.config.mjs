@@ -2,10 +2,13 @@
 import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 
+import react from "@astrojs/react";
+
 export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+
   markdown: {
     shikiConfig: {
       theme: "css-variables",
@@ -30,4 +33,6 @@ export default defineConfig({
       subsets: ["latin"],
     },
   ],
+
+  integrations: [react()],
 });

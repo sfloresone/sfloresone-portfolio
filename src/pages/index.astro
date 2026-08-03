@@ -10,6 +10,7 @@ import { socialLinks } from "../data/social";
 import { skills } from "../data/about";
 import TechIcon from "../components/TechIcon.astro";
 import Tooltip from "../components/Tooltip.astro";
+import VisitorMap from "../components/VisitorMap";
 import mascotImage from "../assets/mascot-3d.png";
 
 // Ordered by category so the row stays grouped: languages → frameworks → tools → databases.
@@ -53,11 +54,9 @@ const techStack = [
         that fit the people using them, as far from generic software as possible.
       </p>
       
-      <!--
       <p data-reveal style="transition-delay:340ms" class="font-body text-base sm:text-lg leading-relaxed mt-4">
         Currently building production-grade AI products at <HoverCard href="https://zaltor.com" label="Zaltor." image="/previews/banner-zaltor.jpg" siteName="zaltor.com" lines={["Zaltor — Software Distribution", "Servicios Gestionados, Ciberseguridad, Backup y MSP."]} />
       </p>
-      -->
 
       <div data-reveal style="transition-delay:420ms" class="flex justify-between items-center mt-16">
         <div class="flex items-center gap-4">
@@ -92,9 +91,14 @@ const techStack = [
           -->
         </div>
 
-        <div class="font-bold text-base">
+        <button
+          type="button"
+          id="be-crazy"
+          data-text="Be crazy."
+          class="glitch-trigger font-bold text-base bg-transparent border-none p-0 cursor-pointer"
+        >
           Be crazy.
-        </div>
+        </button>
       </div>
     </div>
   </section>
@@ -180,7 +184,9 @@ const techStack = [
         </p>
       </div>
 
-
+      <div data-reveal>
+        <VisitorMap client:visible />
+      </div>
 
     </div>
   </section>
@@ -192,6 +198,8 @@ const techStack = [
   >
     ↑
   </button>
+
+  <div id="crazy-shatter" aria-hidden="true"></div>
 </Layout>
 
 <script type="module">
@@ -228,6 +236,56 @@ const techStack = [
     document.querySelectorAll("section[id]").forEach(
       (s) => sectionObserver.observe(s)
     );
+  }
+
+  const beCrazy = document.getElementById("be-crazy");
+  if (beCrazy) {
+    beCrazy.addEventListener("mouseenter", () => {
+      beCrazy.classList.remove("glitch-active");
+      // Force reflow so the animation restarts on rapid re-hovers.
+      void beCrazy.offsetWidth;
+      beCrazy.classList.add("glitch-active");
+    });
+    beCrazy.addEventListener("animationend", () => {
+      beCrazy.classList.remove("glitch-active");
+    });
+
+    const shatter = document.getElementById("crazy-shatter");
+    if (shatter) {
+      beCrazy.addEventListener("click", () => {
+        const rect = beCrazy.getBoundingClientRect();
+        const originX = rect.left + rect.width / 2;
+        const originY = rect.top + rect.height / 2;
+        const pieceCount = 16;
+
+        for (let i = 0; i < pieceCount; i++) {
+          const piece = document.createElement("span");
+          piece.className = "shatter-piece";
+
+          const angle = (Math.PI * 2 * i) / pieceCount + (Math.random() - 0.5) * 0.6;
+          const dist = 70 + Math.random() * 150;
+          const dx = Math.cos(angle) * dist;
+          const dy = Math.sin(angle) * dist * 0.7 + 20;
+          const rot = (Math.random() - 0.5) * 720;
+          const isLine = i % 2 === 0;
+          const size = isLine ? 16 + Math.random() * 18 : 4 + Math.random() * 5;
+
+          piece.style.setProperty("--dx", `${dx}px`);
+          piece.style.setProperty("--dy", `${dy}px`);
+          piece.style.setProperty("--rot", `${rot}deg`);
+          piece.style.animationDelay = `${Math.random() * 60}ms`;
+          piece.style.left = `${originX}px`;
+          piece.style.top = `${originY}px`;
+          piece.style.width = `${size}px`;
+          piece.style.height = isLine ? "2px" : `${size}px`;
+          piece.style.background = i % 5 === 0 ? "#fff" : "#000";
+          piece.style.border = i % 5 === 0 ? "1px solid #000" : "none";
+
+          shatter.appendChild(piece);
+          piece.addEventListener("animationend", () => piece.remove(), { once: true });
+        }
+      });
+    }
   }
 
   document.querySelectorAll("[data-copy]").forEach((el) => {
