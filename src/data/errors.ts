@@ -22,7 +22,6 @@ export const funnyMessages: string[] = [
   "It's not a bug, it's an undocumented feature.",
   "Blaming the intern (there is no intern).",
   "This page ran away from its problems.",
-  "Somewhere, a semicolon is missing.",
   "I swear this worked in production.",
   "Deploying vibes instead of fixes.",
   "Touching grass instead of fixing this.",
