@@ -5,6 +5,9 @@ const year = new Date().getFullYear();
 <footer class="bg-black text-white">
   <div class="max-w-[85ch] mx-auto px-6 py-8">
     <div class="border-t border-white/10 mb-8"></div>
+    <div class="mb-6 flex justify-center">
+      <p id="visitor-count" class="font-body text-sm text-white/40" aria-live="polite"></p>
+    </div>
     <div class="flex justify-between items-center">
       <span class="font-body text-sm text-white/40">&copy; {year} sfloresone</span>
       <div class="flex items-center gap-4">
@@ -18,3 +21,38 @@ const year = new Date().getFullYear();
     </div>
   </div>
 </footer>
+
+<script>
+  function ordinal(n) {
+    const rem100 = n % 100;
+    if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+    switch (n % 10) {
+      case 1:
+        return `${n}st`;
+      case 2:
+        return `${n}nd`;
+      case 3:
+        return `${n}rd`;
+      default:
+        return `${n}th`;
+    }
+  }
+
+  function loadVisitorCount() {
+    const el = document.getElementById("visitor-count");
+    if (!el) return;
+
+    fetch("/api/visit")
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+      .then((data) => {
+        if (typeof data?.number !== "number") return;
+        el.innerHTML = `You&rsquo;re the <span class="text-white/60">${ordinal(data.number)}</span> visitor.`;
+      })
+      .catch(() => {
+        el.textContent = "";
+      });
+  }
+
+  loadVisitorCount();
+  document.addEventListener("astro:page-load", loadVisitorCount);
+</script>

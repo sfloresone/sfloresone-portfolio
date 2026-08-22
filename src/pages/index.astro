@@ -10,7 +10,6 @@ import { socialLinks } from "../data/social";
 import { skills } from "../data/about";
 import TechIcon from "../components/TechIcon.astro";
 import Tooltip from "../components/Tooltip.astro";
-import VisitorMap from "../components/VisitorMap";
 import mascotImage from "../assets/mascot-3d.png";
 
 // Ordered by category so the row stays grouped: languages → frameworks → tools → databases.
@@ -178,14 +177,10 @@ const techStack = [
       </div>
 
       <!-- TODO: replace with real bio -->
-      <div data-reveal class="mb-16">
+      <div data-reveal>
         <p class="font-body text-base text-white/70 leading-[1.85]">
           I'll write something when I feel inspired :(.
         </p>
-      </div>
-
-      <div data-reveal>
-        <VisitorMap client:visible />
       </div>
 
     </div>
