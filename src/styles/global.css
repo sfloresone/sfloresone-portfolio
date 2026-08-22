@@ -83,6 +83,19 @@
   }
 }
 
+.visitor-map-frame {
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 72% at 50% 50%,
+    #000 42%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 85% 72% at 50% 50%,
+    #000 42%,
+    transparent 100%
+  );
+}
+
 .nav-underline {
   position: relative;
   text-decoration: none;

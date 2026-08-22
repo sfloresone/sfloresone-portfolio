@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS visitor_counts (
+  id INTEGER PRIMARY KEY,
+  total INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO visitor_counts (id, total) VALUES (1, 0);
