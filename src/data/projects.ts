@@ -3,43 +3,39 @@ export interface Project {
   tags: string[];
   summary: string;
   projectHref: string;
-  blogHref: string;
+  blogHref?: string;
   liveHref?: string;
   githubHref: string;
 }
 
 export const featuredProjects: Project[] = [
   {
-    title: "sflores.one",
-    tags: ["Astro", "Tailwind", "Cloudflare"],
-    summary: "My personal space on the web. This very portfolio, built with Astro and Tailwind, deployed on Cloudflare.",
-    projectHref: "/project/sflores-one",
-    blogHref: "/blog/test-post",
-    liveHref: "https://sflores.one",
-    githubHref: "https://github.com/sfloresone/sfloresone-portfolio",
+    title: "PulseFi",
+    tags: ["Astro", "React", "Convex", "Python"],
+    summary: "Public financial visualization — interactive charts, IPO calendar, and market news. Read-only MVP with Astro, React, and Convex.",
+    projectHref: "https://github.com/sfloresone/pulsefi",
+    githubHref: "https://github.com/sfloresone/pulsefi",
   },
   {
     title: "42-cursus",
-    tags: ["Rust", "CLI", "Queues"],
-    summary: "Procesador de colas de mensajes en Rust con enfoque en rendimiento y zero-cost abstractions. Diseñado para alto throughput.",
-    projectHref: "#",
-    blogHref: "/blog/42-cursus",
+    tags: ["C", "Python", "Makefile"],
+    summary: "Peer-to-peer, gamified learning through real technical challenges. The repository with every project I build at 42 Madrid.",
+    projectHref: "https://github.com/sfloresone/42-cursus",
     githubHref: "https://github.com/sfloresone/42-cursus",
   },
   {
     title: "a_maze_ing",
     tags: ["Python", "Algorithms", "Data Structures"],
     summary: "Maze generator and solver library implemented in Python exposing a simple API.",
-    projectHref: "#",
-    blogHref: "/blog/a-maze-ing",
+    projectHref: "/blog/a_maze_ing",
+    blogHref: "/blog/a_maze_ing",
     githubHref: "https://github.com/sfloresone/a_maze_ing",
   },
   {
     title: "Forahome",
     tags: ["Java", "Astro", "PostgreSQL", "Docker"],
-    summary: "App iOS para procesamiento de imagen en tiempo real con modelos CoreML on-device. Sin latencia de red.",
-    projectHref: "#",
-    blogHref: "/blog/forahome",
+    summary: "Higher Degree final project. A platform to request home services: plumbers, electricians, etc... in a simple and direct way.",
+    projectHref: "https://github.com/talechto/forahome-backend",
     liveHref: "https://forahome.one",
     githubHref: "https://github.com/talechto/forahome-web-client",
   },

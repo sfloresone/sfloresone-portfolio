@@ -1,0 +1,43 @@
+---
+interface Props {
+  label: string;
+  variant?: "dark" | "light";
+  position?: "top" | "bottom";
+  class?: string;
+}
+
+const {
+  label,
+  variant = "dark",
+  position = "top",
+  class: className = "",
+} = Astro.props;
+---
+
+<span class:list={["group relative inline-flex items-center", className]}>
+  <slot />
+  <span
+    role="tooltip"
+    class:list={[
+      "pointer-events-none absolute left-1/2 -translate-x-1/2 z-50 whitespace-nowrap",
+      "px-2 py-1 rounded-md text-xs font-body font-medium shadow-md",
+      "opacity-0 scale-95 transition-all duration-200 ease-out",
+      position === "top"
+        ? "bottom-full mb-2 translate-y-1 group-hover:translate-y-0"
+        : "top-full mt-2 -translate-y-1 group-hover:translate-y-0",
+      "group-hover:opacity-100 group-hover:scale-100",
+      variant === "light"
+        ? "bg-white text-neutral-900 border border-black/5"
+        : "bg-neutral-900 text-white",
+    ]}
+  >
+    {label}
+    <span
+      class:list={[
+        "absolute left-1/2 -translate-x-1/2 w-2 h-2 rotate-45",
+        position === "top" ? "top-full -mt-1" : "bottom-full -mb-1",
+        variant === "light" ? "bg-white" : "bg-neutral-900",
+      ]}
+    ></span>
+  </span>
+</span>

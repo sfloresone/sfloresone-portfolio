@@ -1,0 +1,55 @@
+---
+import TypeScript   from './icons/TypeScript.astro';
+import Python       from './icons/Python.astro';
+import JavaScript   from './icons/JavaScript.astro';
+import Java         from './icons/Java.astro';
+import C            from './icons/C.astro';
+import PostgreSQL   from './icons/PostgreSQL.astro';
+import MySQL        from './icons/MySQL.astro';
+import SQLite       from './icons/SQLite.astro';
+import SpringBoot   from './icons/SpringBoot.astro';
+import AstroIcon    from './icons/AstroIcon.astro';
+import NodeJS       from './icons/NodeJS.astro';
+import Bun          from './icons/Bun.astro';
+import Hono         from './icons/Hono.astro';
+import React        from './icons/React.astro';
+import Git          from './icons/Git.astro';
+import GitHub       from './icons/GitHub.astro';
+import Docker       from './icons/Docker.astro';
+import Linux        from './icons/Linux.astro';
+import Cloudflare   from './icons/Cloudflare.astro';
+import IntelliJ     from './icons/IntelliJ.astro';
+import VSCode       from './icons/VSCode.astro';
+import Supabase     from './icons/Supabase.astro';
+
+interface Props { name: string; class?: string; }
+const { name, class: className = 'w-4 h-4' } = Astro.props;
+
+const icons: Record<string, any> = {
+  TypeScript,
+  Python,
+  JavaScript,
+  Java,
+  C,
+  PostgreSQL,
+  MySQL,
+  SQLite,
+  'Spring Boot': SpringBoot,
+  Astro: AstroIcon,
+  'Node.js': NodeJS,
+  Bun,
+  Hono,
+  React,
+  Git,
+  GitHub,
+  Docker,
+  Linux,
+  Cloudflare,
+  'IntelliJ IDEA': IntelliJ,
+  VSCode,
+  Supabase,
+};
+
+const Icon = icons[name];
+---
+{Icon && <Icon class={className} />}

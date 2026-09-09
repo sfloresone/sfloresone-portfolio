@@ -2,68 +2,39 @@ export interface Role {
   title: string;
   type: string;
   period: string;
-  bullets: string[];
+  description: string;
   current?: boolean;
+  tags?: string[];
 }
 
 export interface WorkEntry {
   company: string;
-  logo: string;
   url: string;
   location: string;
-  totalPeriod: string;
-  tags?: string[];
   roles: Role[];
 }
 
 export const workExperiences: WorkEntry[] = [
   {
     company: "Zaltor",
-    logo: "/logo-recortado.svg",
     url: "https://zaltor.com",
-    location: "Madrid, Spain",
-    totalPeriod: "2026 – Present",
-    tags: ["OpenAI Platform", "Backend", "Enterprise Software", "Hono", "SQLite", "Astro", "Svelte"],
+    location: "Spain",
     roles: [
       {
-        title: "Junior Software Engineer",
+       title: "Junior Software Engineer",
         type: "Full-time",
         period: "Jul. 2026 – Present",
         current: true,
-        bullets: [
-          "Building production-grade AI products integrated into enterprise software distribution workflows.",
-          "Designing backend architecture and APIs for internal tooling.",
-        ],
-      },
+        description: `Following the internship, continued at Zaltor full-time to take the work further. Leading the <strong>development, design, and deployment</strong> of multiple AI products: some internal, some public-facing. The stack includes <strong>React and Astro</strong> on the frontend, paired with backend services and <strong>deployment pipelines</strong>. Still shipping features, maintaining production systems, and iterating fast — all while keeping the architecture clean and reliable.`,
+        tags: ["TypeScript", "React", "Astro", "Python", "Docker"],
+       },
       {
         title: "Software Developer Intern",
         type: "Internship",
         period: "Feb. 2026 – Jun. 2026",
-        bullets: [
-          "Led the end-to-end development of the corporate document intranet, from initial design through production deployment.",
-          "Developed the backend using Hono and SQLite, consumed by and interface built with Astro and Svelte.",
-          "Designed a lightweight Markdown-based RAG engine to augment a new internal AI's knowledge base.",
-        ],
+        description: `Led the <strong>end-to-end development</strong> of the company's corporate document intranet — from initial design and architecture decisions through production deployment. Built the backend with <strong>Hono and SQLite</strong>, and the frontend interface with Astro and Svelte, keeping the stack lightweight. Also designed a <strong>Markdown-based RAG engine</strong> from scratch to give the company's internal AI assistant up-to-date knowledge about internal documentation.`,
+        tags: ["TypeScript", "Astro", "SQLite", "Bun", "Node.js"],
       },
     ],
   },
-  {
-    company: "Talechto",
-    logo: "/favicon-talechto.png",
-    url: "https://talechto.com",
-    location: "Madrid, Spain",
-    totalPeriod: "2026 – Present",
-    tags: ["Python", "Django", "PostgreSQL"],
-    roles: [
-      {
-        title: "Freelance Full Stack Developer",
-        type: "Freelance",
-        period: "Jun. 2026 – Present",
-        bullets: [
-          "Developed and maintained the backend API for the company's main product.",
-          "Implemented database schemas and optimized queries for performance.",
-        ],
-      },
-    ],
-  }
 ];

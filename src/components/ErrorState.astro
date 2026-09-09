@@ -1,0 +1,249 @@
+---
+import { getErrorInfo, funnyMessages, rareMessages } from "../data/errors";
+
+interface Props {
+  code: string;
+}
+
+const { code } = Astro.props;
+const info = getErrorInfo(code);
+---
+
+<section class="relative bg-black text-white flex-1 flex flex-col overflow-hidden">
+  <div class="error-texture pointer-events-none absolute inset-0" aria-hidden="true"></div>
+  <div id="error-shatter" aria-hidden="true"></div>
+
+  <div class="relative max-w-[85ch] mx-auto px-6 flex-1 flex flex-col items-center justify-center gap-16 py-16 w-full">
+    <div data-reveal class="flex items-center gap-8 sm:gap-12">
+      <div class="flex flex-col justify-center items-start text-left max-w-[14rem] sm:max-w-[18rem]">
+        <span
+          data-code-trigger
+          role="button"
+          tabindex="0"
+          class="fluffy-text font-body font-bold text-[72px] sm:text-[110px] lg:text-[150px] leading-none cursor-pointer select-none"
+        >
+          {info.code}
+        </span>
+        <p class="font-body text-sm sm:text-base text-white/50 italic mt-3">
+          {info.message}
+        </p>
+      </div>
+      <div class="w-px bg-white/15 self-stretch"></div>
+      <a
+        href="/"
+        data-mascot-home
+        aria-label="Back to home"
+        class="glitch-trigger self-center"
+      >
+        <img
+          src="/black-fluffy-personal-logo.png"
+          alt="Sergio Flores mascot"
+          width="775"
+          height="892"
+          class="h-28 sm:h-40 lg:h-52 w-auto object-contain"
+        />
+      </a>
+    </div>
+
+    <div class="flex flex-col items-center gap-6">
+      <p
+        data-typewriter
+        data-messages={JSON.stringify(funnyMessages)}
+        data-rare={JSON.stringify(rareMessages)}
+        class="font-body text-base text-white/50 italic min-h-[1.5em]"
+        aria-hidden="true"
+      >
+      </p>
+
+      <a
+        href="/"
+        class="font-body text-sm text-white/40 hover:text-white transition-colors nav-underline"
+      >
+        ← Back home
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  #error-shatter {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* Whole-section ambience: a very subtle white glow + fine grain on the black background. */
+  .error-texture {
+    background-image:
+      radial-gradient(ellipse 70% 55% at 50% 35%, rgba(255, 255, 255, 0.08), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' seed='11' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+    background-size: 100% 100%, 160px 160px;
+  }
+
+  /* Light, velvet-fluffy fill for the code — echoes the mascot's white fur against the dark page. */
+  .fluffy-text {
+    color: transparent;
+    background-color: #ececec;
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 55%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cfilter id='fluffn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='7' stitchTiles='stitch' result='t'/%3E%3CfeGaussianBlur in='t' stdDeviation='0.7'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23fluffn)'/%3E%3C/svg%3E");
+    background-size: 100% 100%, 48px 48px;
+    background-blend-mode: normal, multiply;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+</style>
+
+<script>
+  const HOLD_MS = 6800;
+  const NEXT_DELAY_MS = 400;
+  const TYPE_MS = 55;
+  const DELETE_MS = 28;
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  function initTypewriter() {
+    const el = document.querySelector<HTMLElement>("[data-typewriter]");
+    const trigger = document.querySelector<HTMLElement>("[data-code-trigger]");
+    if (!el) return;
+    clearTimeout(timer);
+
+    const messages: string[] = JSON.parse(el.dataset.messages || "[]");
+    const rare: string[] = JSON.parse(el.dataset.rare || "[]");
+    if (!messages.length) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      el.textContent = messages[0];
+      return;
+    }
+
+    let msgIndex = 0;
+    let activeMessage = messages[0];
+    let charIndex = 0;
+    let deleting = false;
+    let forcedNext: string | null = null;
+
+    const advanceMessage = () => {
+      if (forcedNext !== null) {
+        activeMessage = forcedNext;
+        forcedNext = null;
+      } else {
+        msgIndex = (msgIndex + 1) % messages.length;
+        activeMessage = messages[msgIndex];
+      }
+    };
+
+    const tick = () => {
+      charIndex += deleting ? -1 : 1;
+      el.textContent = activeMessage.slice(0, charIndex);
+
+      if (!deleting && charIndex === activeMessage.length) {
+        timer = setTimeout(() => {
+          deleting = true;
+          tick();
+        }, HOLD_MS);
+        return;
+      }
+
+      if (deleting && charIndex === 0) {
+        deleting = false;
+        advanceMessage();
+        timer = setTimeout(tick, NEXT_DELAY_MS);
+        return;
+      }
+
+      timer = setTimeout(tick, deleting ? DELETE_MS : TYPE_MS);
+    };
+
+    tick();
+
+    if (trigger && rare.length) {
+      const fireRare = () => {
+        forcedNext = rare[Math.floor(Math.random() * rare.length)];
+        clearTimeout(timer);
+        if (charIndex === 0) {
+          deleting = false;
+          advanceMessage();
+          timer = setTimeout(tick, TYPE_MS);
+        } else {
+          deleting = true;
+          tick();
+        }
+      };
+      trigger.addEventListener("click", fireRare);
+      trigger.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          fireRare();
+        }
+      });
+    }
+  }
+
+  function initMascotHome() {
+    const link = document.querySelector<HTMLAnchorElement>("[data-mascot-home]");
+    const shatter = document.getElementById("error-shatter");
+    if (!link || !shatter) return;
+
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (link.dataset.leaving === "1") return;
+      link.dataset.leaving = "1";
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        window.location.href = "/";
+        return;
+      }
+
+      link.classList.remove("glitch-active");
+      void link.offsetWidth;
+      link.classList.add("glitch-active");
+
+      const rect = link.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + rect.height / 2;
+      const pieceCount = 16;
+
+      for (let i = 0; i < pieceCount; i++) {
+        const piece = document.createElement("span");
+        piece.className = "shatter-piece";
+
+        const angle = (Math.PI * 2 * i) / pieceCount + (Math.random() - 0.5) * 0.6;
+        const dist = 70 + Math.random() * 150;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist * 0.7 + 20;
+        const rot = (Math.random() - 0.5) * 720;
+        const isLine = i % 2 === 0;
+        const size = isLine ? 16 + Math.random() * 18 : 4 + Math.random() * 5;
+
+        piece.style.setProperty("--dx", `${dx}px`);
+        piece.style.setProperty("--dy", `${dy}px`);
+        piece.style.setProperty("--rot", `${rot}deg`);
+        piece.style.animationDelay = `${Math.random() * 60}ms`;
+        piece.style.left = `${originX}px`;
+        piece.style.top = `${originY}px`;
+        piece.style.width = `${size}px`;
+        piece.style.height = isLine ? "2px" : `${size}px`;
+        piece.style.background = i % 5 === 0 ? "#000" : "#fff";
+        piece.style.border = i % 5 === 0 ? "1px solid #fff" : "none";
+
+        shatter.appendChild(piece);
+        piece.addEventListener("animationend", () => piece.remove(), { once: true });
+      }
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 650);
+    });
+  }
+
+  initTypewriter();
+  initMascotHome();
+  document.addEventListener("astro:page-load", () => {
+    initTypewriter();
+    initMascotHome();
+  });
+</script>

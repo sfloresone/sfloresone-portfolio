@@ -1,0 +1,12 @@
+{
+	"name": "sfloresone-portfolio",
+	"pages_build_output_dir": "./dist",
+	"compatibility_date": "2026-07-17",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "sfloresone-visitors",
+			"database_id": "d5022240-3148-43de-bed2-2c2d01a3cd56"
+		}
+	]
+}

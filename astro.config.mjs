@@ -6,11 +6,13 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+
   markdown: {
     shikiConfig: {
       theme: "css-variables",
     },
   },
+
   fonts: [
     {
       name: "Libre Baskerville",
