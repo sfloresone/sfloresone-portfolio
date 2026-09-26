@@ -1,0 +1,63 @@
+---
+import { intro, sections, site, socials, type SectionId } from "../../data/site";
+
+interface Props {
+  active?: SectionId;
+}
+
+const { active } = Astro.props;
+
+const externalSocials = socials.flatMap((link) =>
+  link.href.startsWith("http") || link.href.startsWith("mailto:") ? [link] : [],
+);
+---
+
+<div class="deck">
+  <header class="deck-head">
+    <div class="deck-brand">
+      <a href="/" class="deck-name" data-deck-home>{site.name}</a>
+      <img
+        class="deck-mascot"
+        src="/black-personal-logo-3D.png"
+        alt=""
+        width="72"
+        height="72"
+        decoding="async"
+      />
+    </div>
+    <p class="deck-intro">{intro}</p>
+  </header>
+
+  <nav class="deck-nav" aria-label="Sections">
+    <ul>
+      {
+        sections.map((section) => (
+          <li>
+            <a
+              href={section.href}
+              class="deck-link"
+              data-deck-link={section.id}
+              data-astro-prefetch="hover"
+              aria-current={section.id === active ? "page" : undefined}
+            >
+              <span>{section.label}</span>
+              <span class="deck-link-mark" aria-hidden="true" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <ul class="deck-socials">
+    {
+      externalSocials.map((link) => (
+        <li>
+          <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
+            {link.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>

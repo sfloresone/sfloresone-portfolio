@@ -1,0 +1,19 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<details class:list={["pane-disclosure", className]}>
+  <summary class="pane-disclosure-trigger">
+    <span class="pane-disclosure-label"><slot name="summary" /></span>
+    <svg class="pane-disclosure-chevron" viewBox="0 0 12 12" aria-hidden="true">
+      <path d="m2.5 4 3.5 3.5L9.5 4" />
+    </svg>
+  </summary>
+  <div class="pane-disclosure-content">
+    <slot />
+  </div>
+</details>

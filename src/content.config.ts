@@ -4,9 +4,9 @@ import { z } from "astro/zod";
 
 const blog = defineCollection({
   loader: glob({
-    pattern: "**/*.md",
+    pattern: "**/*.mdx",
     base: "./src/content/blog",
-    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
+    generateId: ({ entry }) => entry.replace(/\.mdx$/, ""),
   }),
   schema: z.object({
     title: z.string(),
@@ -14,26 +14,10 @@ const blog = defineCollection({
     category: z.string(),
     author: z.string().default("Sergio Flores"),
     description: z.string().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.string()).default([]),
+    published: z.boolean().default(true),
+    accent: z.string().optional(),
   }),
 });
 
-const project = defineCollection({
-  loader: glob({
-    pattern: "**/*.md",
-    base: "./src/content/project",
-    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
-  }),
-  schema: z.object({
-    title: z.string(),
-    tags: z.array(z.string()),
-    summary: z.string(),
-    year: z.number(),
-    color: z.string(),
-    blogSlug: z.string(),
-    author: z.string().default("Sergio Flores"),
-    description: z.string().optional(),
-  }),
-});
-
-export const collections = { blog, project };
+export const collections = { blog };

@@ -1,9 +1,11 @@
 const COOKIE_NAME = "visitor_no";
+
 const COOKIE_MAX_AGE = 60 * 60 * 24; // 1 day
 
 function readCookie(request: Request, name: string): number | null {
   const header = request.headers.get("Cookie") || "";
   const match = header.match(new RegExp(`(?:^|;\\s*)${name}=(\\d+)`));
+
   return match ? Number(match[1]) : null;
 }
 
@@ -25,6 +27,7 @@ export async function onRequestGet(context: {
       "UPDATE visitor_counts SET total = total + 1 WHERE id = 1 RETURNING total",
     )
     .first<{ total: number }>();
+
   const total = totalRow?.total ?? 1;
 
   const headers = new Headers({ "Content-Type": "application/json" });

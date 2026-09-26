@@ -1,0 +1,81 @@
+---
+import TypeScript from "./TypeScript.astro";
+import Python from "./Python.astro";
+import JavaScript from "./JavaScript.astro";
+import Java from "./Java.astro";
+import C from "./C.astro";
+import PostgreSQL from "./PostgreSQL.astro";
+import MySQL from "./MySQL.astro";
+import SQLite from "./SQLite.astro";
+import SpringBoot from "./SpringBoot.astro";
+import AstroIcon from "./AstroIcon.astro";
+import NodeJS from "./NodeJS.astro";
+import Bun from "./Bun.astro";
+import Hono from "./Hono.astro";
+import React from "./React.astro";
+import Git from "./Git.astro";
+import GitHub from "./GitHub.astro";
+import Docker from "./Docker.astro";
+import Linux from "./Linux.astro";
+import Cloudflare from "./Cloudflare.astro";
+import IntelliJ from "./IntelliJ.astro";
+import VSCode from "./VSCode.astro";
+import Supabase from "./Supabase.astro";
+import Tailwind from "./Tailwind.astro";
+import BaseUI from "./BaseUI.astro";
+import Shadcn from "./Shadcn.astro";
+import Cursor from "./Cursor.astro";
+import ClaudeCode from "./ClaudeCode.astro";
+import Codex from "./Codex.astro";
+import Gemini from "./Gemini.astro";
+import Pi from "./Pi.astro";
+import Vercel from "./Vercel.astro";
+
+interface Props {
+  name: string;
+}
+
+const { name } = Astro.props;
+
+const icons = {
+  TypeScript,
+  Python,
+  JavaScript,
+  Java,
+  C,
+  PostgreSQL,
+  MySQL,
+  SQLite,
+  "Spring Boot": SpringBoot,
+  Astro: AstroIcon,
+  "Node.js": NodeJS,
+  Bun,
+  Hono,
+  React,
+  Git,
+  GitHub,
+  Docker,
+  Linux,
+  Cloudflare,
+  "IntelliJ IDEA": IntelliJ,
+  VSCode,
+  Supabase,
+  Tailwind,
+  "Base UI": BaseUI,
+  shadcn: Shadcn,
+  Cursor,
+  "Claude Code": ClaudeCode,
+  Codex,
+  Gemini,
+  Pi,
+  Vercel,
+} as const satisfies Record<string, typeof TypeScript>;
+
+const isIconName = (value: string): value is keyof typeof icons => Object.hasOwn(icons, value);
+
+const Icon = isIconName(name) ? icons[name] : undefined;
+---
+
+<span class="tech-icon" aria-hidden="true">
+  {Icon && <Icon class="tech-icon-svg" />}
+</span>

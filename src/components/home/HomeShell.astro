@@ -1,0 +1,58 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Deck from "./Deck.astro";
+import type { SectionId } from "../../data/site";
+
+interface Props {
+  title: string;
+  description: string;
+  active?: SectionId;
+  lost?: boolean;
+}
+
+const { title, description, active, lost = false } = Astro.props;
+
+const hasPane = Astro.slots.has("default");
+---
+
+<Layout title={title} description={description}>
+  <div
+    class="shell"
+    data-shell
+    data-active={lost ? "" : (active ?? "")}
+    data-lost={lost ? "" : undefined}
+  >
+    <div class="shell-surface" aria-hidden="true"></div>
+
+    <aside class="shell-deck">
+      <Deck active={active} />
+    </aside>
+
+    <section class="shell-pane" data-pane-slot aria-live="polite">
+      {
+        hasPane && (
+          <div class="pane-layer" data-pane-layer>
+            <slot />
+          </div>
+        )
+      }
+    </section>
+
+    <div class="shell-field" data-field transition:persist="field">
+      <canvas class="shell-canvas" data-field-canvas aria-hidden="true"></canvas>
+    </div>
+
+    <div class="lost-ui">
+      <a class="lost-home" href="/">Home</a>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { initPanes } from "../../scripts/panes/controller";
+  import { initField } from "../../graphics/field/mount";
+
+  initPanes();
+
+  initField();
+</script>
