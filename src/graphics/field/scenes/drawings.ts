@@ -1,4 +1,5 @@
 import type { Placement, SceneField, SceneLayout } from "../types";
+import { coverPlacement, halfTarget } from "./cover";
 import { rasterScene, type SceneMode } from "./raster";
 
 export interface TextOptions {
@@ -69,6 +70,70 @@ export async function imageScene(src: string, layout: SceneLayout, options: Imag
     placement: options.placement,
     softness: options.softness,
   });
+}
+
+export interface SpreadOptions {
+  layout: "full" | "diagonal";
+  placement: Placement;
+  /** Horizontal shift of each diagonal half away from the cut, in CSS pixels. */
+  seam?: number;
+}
+
+/**
+ * Photos covering `placement` edge to edge: one for `full`, two for `diagonal`,
+ * split by the bottom-left to top-right diagonal with the same seam as the gallery.
+ * Each photo is cover-fit with its center on the half centroid (or box center).
+ */
+export async function spreadScene(srcs: string[], layout: SceneLayout, options: SpreadOptions): Promise<SceneField> {
+  const photos = await Promise.all(srcs.map(loadImage));
+  const seam = options.seam ?? 0;
+  const { placement } = options;
+
+  return rasterScene(
+    (context, width, height) => {
+      const halves: [number, number][][] = [
+        [
+          [-seam, 0],
+          [width - seam, 0],
+          [-seam, height],
+        ],
+        [
+          [width + seam, 0],
+          [width + seam, height],
+          [seam, height],
+        ],
+      ];
+
+      photos.forEach((photo, index) => {
+        context.save();
+        context.beginPath();
+        context.rect(0, 0, width, height);
+        context.clip();
+
+        const half = options.layout === "diagonal" ? halves[index] : undefined;
+
+        if (half) {
+          context.beginPath();
+          half.forEach(([x, y], corner) => (corner === 0 ? context.moveTo(x, y) : context.lineTo(x, y)));
+          context.closePath();
+          context.clip();
+        }
+
+        const rect = coverPlacement(
+          photo.naturalWidth,
+          photo.naturalHeight,
+          width,
+          height,
+          halfTarget(options.layout === "diagonal" ? index : null),
+        );
+
+        context.drawImage(photo, rect.x, rect.y, rect.width, rect.height);
+        context.restore();
+      });
+    },
+    layout,
+    { aspect: placement.width / Math.max(placement.height, 1), mode: "luminance", placement },
+  );
 }
 
 /** A vertical rail with one node and one bar per stop, newest first. */

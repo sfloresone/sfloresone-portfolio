@@ -11,17 +11,15 @@ const showCategories = new Set(posts.map((post) => post.data.category)).size > 1
 ---
 
 <Pane id="blog">
-  <section class="pane-block">
-    <ul class="pane-list">
+  <section class="max-w-[68ch]">
+    <ul class="flex flex-col gap-7.5">
       {
         posts.map((post) => (
-          <li class="pane-entry">
-            <div class="pane-entry-row">
-              <a class="pane-strong" href={`/blog/${post.id}`}>
-                {post.data.title}
-              </a>
-            </div>
-            <p class="pane-muted">
+          <li>
+            <a class="pane-link font-medium text-ink" href={`/blog/${post.id}`}>
+              {post.data.title}
+            </a>
+            <p class="text-muted">
               {showCategories && (
                 <>
                   <span style={`color: ${styleForCategory(post.data.category).bar}`}>{post.data.category}</span>
@@ -32,7 +30,7 @@ const showCategories = new Set(posts.map((post) => post.data.category)).size > 1
                 {post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </time>
             </p>
-            {post.data.description && <p>{post.data.description}</p>}
+            {post.data.description && <p class="mt-[0.4em]">{post.data.description}</p>}
           </li>
         ))
       }

@@ -1,19 +1,38 @@
 ---
 interface Props {
-  class?: string;
+  /** How the chevron lines up with a multi-line summary. */
+  align?: "start" | "center";
+  contentClass?: string;
 }
 
-const { class: className } = Astro.props;
+const { align = "start", contentClass } = Astro.props;
 ---
 
-<details class:list={["pane-disclosure", className]}>
-  <summary class="pane-disclosure-trigger">
-    <span class="pane-disclosure-label"><slot name="summary" /></span>
-    <svg class="pane-disclosure-chevron" viewBox="0 0 12 12" aria-hidden="true">
-      <path d="m2.5 4 3.5 3.5L9.5 4" />
+<details class="disclosure group/disclosure">
+  <summary
+    class:list={[
+      "relative z-1 flex cursor-pointer list-none justify-between gap-3 marker:content-[''] focus-visible:rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link [&::-webkit-details-marker]:hidden",
+      align === "center" ? "items-center" : "items-start",
+    ]}
+  >
+    <span class="min-w-0 flex-1"><slot name="summary" /></span>
+    <svg
+      class:list={[
+        "size-[0.85rem] flex-none transition-transform duration-(--pane-motion-duration) ease-(--pane-motion-ease) group-open/disclosure:rotate-180 motion-reduce:transition-none",
+        { "mt-[0.35rem]": align === "start" },
+      ]}
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="1.2"
+      aria-hidden="true"
+    >
+      <path d="m2.5 4 3.5 3.5L9.5 4"></path>
     </svg>
   </summary>
-  <div class="pane-disclosure-content">
+  <div class:list={["pt-[0.55rem]", contentClass]}>
     <slot />
   </div>
 </details>

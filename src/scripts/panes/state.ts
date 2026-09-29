@@ -9,6 +9,8 @@ export interface PaneState {
   lost: boolean;
   /** Some pane layer is on screen, even partly. */
   hasLayers: boolean;
+  /** Id of the story spread whose text is being read, if any. */
+  spread: string | null;
   /**
    * Per pane row, 4 floats: open cells, row shows a layer (1) or the veil (0), crest of the
    * horizontal front, crest of a switch band. The DOM clip and the field both read these.
@@ -19,6 +21,8 @@ export interface PaneState {
 type SectionListener = (id: SectionId | null) => void;
 
 type LostListener = (lost: boolean) => void;
+
+type SpreadListener = (src: string | null) => void;
 
 /** Reveal timing and texture, in grid cells and seconds. */
 export const revealTuning = {
@@ -34,6 +38,7 @@ export const paneState: PaneState = {
   active: null,
   lost: false,
   hasLayers: false,
+  spread: null,
   rows: new Float32Array(maxRevealRows * 4),
 };
 
@@ -42,6 +47,8 @@ const sectionListeners = new Set<SectionListener>();
 const intentListeners = new Set<SectionListener>();
 
 const lostListeners = new Set<LostListener>();
+
+const spreadListeners = new Set<SpreadListener>();
 
 export function onSectionChange(listener: SectionListener): () => void {
   sectionListeners.add(listener);
@@ -61,6 +68,12 @@ export function onLostChange(listener: LostListener): () => void {
   return () => lostListeners.delete(listener);
 }
 
+export function onSpreadChange(listener: SpreadListener): () => void {
+  spreadListeners.add(listener);
+
+  return () => spreadListeners.delete(listener);
+}
+
 export function announceSection(id: SectionId | null): void {
   paneState.active = id;
 
@@ -77,6 +90,19 @@ export function announceLost(lost: boolean): void {
   paneState.lost = lost;
 
   for (const listener of lostListeners) listener(lost);
+}
+
+export function announceSpread(src: string | null): void {
+  if (paneState.spread === src) return;
+
+  paneState.spread = src;
+
+  for (const listener of spreadListeners) listener(src);
+}
+
+/** `pathname` without trailing slashes, so each shell route has one key. */
+export function routeKey(pathname: string): string {
+  return pathname.replace(/\/+$/, "") || "/";
 }
 
 export function isSectionId(value: string | undefined): value is SectionId {

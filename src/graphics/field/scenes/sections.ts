@@ -6,7 +6,7 @@ const roleCount = workExperiences.reduce((total, entry) => total + entry.roles.l
 
 /** What the halftone takes the shape of while a section is open. */
 const sectionScenes: Record<SectionId, (layout: SceneLayout) => SceneField | Promise<SceneField>> = {
-  about: (layout) => imageScene("/logo-recortado.svg", layout),
+  about: (layout) => imageScene("/sflores-logo-white.svg", layout),
   work: (layout) => timelineScene(roleCount, layout),
   blog: (layout) => textScene("Aa", layout),
 };

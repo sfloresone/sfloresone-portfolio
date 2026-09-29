@@ -76,6 +76,6 @@ const isIconName = (value: string): value is keyof typeof icons => Object.hasOwn
 const Icon = isIconName(name) ? icons[name] : undefined;
 ---
 
-<span class="tech-icon" aria-hidden="true">
+<span class="inline-flex size-[0.9rem] flex-[0_0_0.9rem] items-center justify-center text-[#d4d4d4]" aria-hidden="true">
   {Icon && <Icon class="tech-icon-svg" />}
 </span>

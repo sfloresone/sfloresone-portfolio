@@ -104,6 +104,13 @@ export const site = {
     },
   ] satisfies Section[],
 
+  story: {
+    href: "/about/story",
+    label: "More about me",
+    title: "More about me — Sergio Flores",
+    description: "The longer version of Sergio Flores' story, from Madrid.",
+  },
+
   socials: [
     { label: "X", href: "https://x.com/sfloresone" },
     { label: "Github", href: "https://github.com/sfloresone" },
@@ -247,6 +254,7 @@ export const site = {
 export const {
   intro,
   sections,
+  story,
   socials,
   education,
   skills,
@@ -255,6 +263,9 @@ export const {
   categoryStyles,
   defaultCategoryStyle,
 } = site;
+
+/** Every route rendered inside the home shell. */
+export const shellPaths: string[] = ["/", ...sections.map((section) => section.href), story.href];
 
 export function sectionById(id: SectionId): Section {
   const section = sections.find((entry) => entry.id === id);

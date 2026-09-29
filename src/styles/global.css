@@ -1,10 +1,16 @@
+/*
+ * Closed stylesheet: style components with Tailwind utilities in their markup.
+ * Only edit this file when strictly necessary; see "Styling" in AGENTS.md.
+ */
 @import "tailwindcss" source(none);
 
 @source "../components/home";
 @source "../layouts";
 @source "../pages";
+@source "../components/icons/TechIcon.astro";
 
 @theme {
+  --spacing-unit: 20px;
   --font-sans: var(--font-neue-montreal), sans-serif;
   --font-heading: var(--font-space-grotesk);
   --color-canvas: #070707;
@@ -15,6 +21,41 @@
   --color-chip: #2a2a2a;
   --color-underline: #3a3a3a;
   --color-scrollbar: #262626;
+  --color-line: color-mix(in srgb, #ffffff 9%, var(--color-surface));
+}
+
+/* Underlined link inside a pane; hover and focus light it up. */
+@utility pane-link {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline);
+  text-underline-offset: 3px;
+  transition:
+    color 0.3s linear,
+    text-decoration-color 0.3s linear;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-ink);
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Vertical 1px timeline rail; place it with --rail-x (and --rail-top). */
+@utility rail-line {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: var(--rail-top, 0);
+    bottom: 0;
+    left: var(--rail-x);
+    z-index: 0;
+    width: 1px;
+    background: var(--color-line);
+    pointer-events: none;
+  }
 }
 
 @layer base {
@@ -36,6 +77,11 @@
     background: var(--color-canvas);
     color: var(--color-ink);
     text-rendering: geometricPrecision;
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   body > main {
@@ -44,14 +90,17 @@
   }
 }
 
+/*
+ * The shell's geometry lives here rather than in utilities: the reveal grid and the WebGPU
+ * field read --unit, and the mobile layout below rewrites these boxes as a whole.
+ */
 @layer components {
   .shell {
-    --unit: 20px;
-    --rail: 20px;
+    --unit: var(--spacing-unit);
+    --rail: var(--spacing-unit);
     --deck-w: round(nearest, calc((100% - var(--rail)) * 0.2), var(--unit));
     --pane-w: round(nearest, calc((100% - var(--rail)) * 0.3), var(--unit));
     --col2-left: calc(var(--rail) + var(--deck-w));
-    --line: color-mix(in srgb, #ffffff 9%, var(--color-surface));
     --pane-motion-duration: 220ms;
     --pane-opacity-duration: 180ms;
     --pane-motion-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -66,10 +115,7 @@
 
   .shell-surface {
     position: absolute;
-    top: var(--rail);
-    bottom: var(--rail);
-    left: var(--rail);
-    right: 0;
+    inset: var(--rail) 0 var(--rail) var(--rail);
     z-index: 1;
     background: var(--color-surface);
   }
@@ -83,7 +129,7 @@
     z-index: 4;
     overflow: hidden;
     background: var(--color-surface);
-    box-shadow: inset -1px 0 0 var(--line);
+    box-shadow: inset -1px 0 0 var(--color-line);
   }
 
   .shell-pane {
@@ -98,10 +144,7 @@
 
   .shell-field {
     position: absolute;
-    top: var(--rail);
-    bottom: var(--rail);
-    left: var(--col2-left);
-    right: 0;
+    inset: var(--rail) 0 var(--rail) var(--col2-left);
     z-index: 2;
     pointer-events: none;
   }
@@ -118,129 +161,6 @@
     opacity: 1;
   }
 
-  /* Lost (404): same shell geometry; UI only after the wipe settles */
-
-  .lost-ui {
-    position: absolute;
-    inset: var(--rail) 0 var(--rail) var(--rail);
-    z-index: 5;
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: clamp(3rem, 12vh, 6rem);
-    pointer-events: none;
-  }
-
-  .shell.is-lost-ready .lost-ui {
-    display: flex;
-  }
-
-  .lost-home {
-    pointer-events: auto;
-    color: var(--color-muted);
-    transition: color 0.3s linear;
-  }
-
-  .lost-home:hover,
-  .lost-home:focus-visible {
-    color: var(--color-ink);
-    outline: none;
-  }
-
-  /* Deck */
-
-  .deck {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--unit) * 1.5);
-    height: 100%;
-    padding: var(--unit);
-    line-height: 1.5;
-  }
-
-  .deck-head {
-    position: relative;
-    /* Lane for the smaller mascot; name stays one line on the shared left edge. */
-    padding-right: 2rem;
-  }
-
-  .deck-name {
-    display: block;
-    width: max-content;
-    max-width: 100%;
-    font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: clamp(1.5rem, 2.4vw, 1.85rem);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-  }
-
-  .deck-mascot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 2rem;
-    height: 2rem;
-    object-fit: contain;
-    opacity: 0.85;
-  }
-
-  .deck-intro {
-    margin-top: 0.85rem;
-    max-width: 28ch;
-    color: var(--color-muted);
-  }
-
-  .deck-nav ul,
-  .deck-socials {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .deck-link,
-  .deck-socials a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4em;
-    min-height: 1.85em;
-    color: var(--color-muted);
-    transition: color 0.3s linear;
-  }
-
-  .deck-link:hover,
-  .deck-link:focus-visible,
-  .deck-socials a:hover,
-  .deck-socials a:focus-visible,
-  .deck-link[aria-current="page"] {
-    color: var(--color-ink);
-  }
-
-  .deck-link-mark {
-    width: 0.45em;
-    height: 0.45em;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0;
-    transform: scale(0.4);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-  }
-
-  .deck-link[aria-current="page"] .deck-link-mark {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  .deck-socials {
-    margin-top: auto;
-  }
-
-  /* Pane */
-
   .pane-layer {
     position: absolute;
     inset: 0;
@@ -248,248 +168,32 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--color-surface);
-    box-shadow: inset -1px 0 0 var(--line);
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-scrollbar) transparent;
+    box-shadow: inset -1px 0 0 var(--color-line);
+    scrollbar-width: none;
   }
 
-  .pane {
-    padding: var(--unit);
-    line-height: 1.6;
-  }
-
-  :where(.pane) a {
-    color: var(--color-link);
-    text-decoration: underline;
-    text-decoration-color: var(--color-underline);
-    text-underline-offset: 3px;
-    transition:
-      color 0.3s linear,
-      text-decoration-color 0.3s linear;
-  }
-
-  :where(.pane) a:hover,
-  :where(.pane) a:focus-visible {
-    color: var(--color-ink);
-    text-decoration-color: currentColor;
-  }
-
-  .pane-head {
-    position: relative;
-    margin-bottom: calc(var(--unit) * 1.5);
-    padding-right: 2rem;
-  }
-
-  .pane-title {
-    font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: clamp(1.35rem, 2vw, 1.5rem);
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    outline: none;
-  }
-
-  .pane-close {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    display: inline-flex;
-    width: 1.5rem;
-    height: 1.5rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--color-chip);
-    color: var(--color-ink);
-    text-decoration: none;
-    transform: translateY(-50%);
-  }
-
-  .pane-close:hover,
-  .pane-close:focus-visible {
-    background: var(--color-ink);
-    color: #121212;
-  }
-
-  .pane-close svg {
-    width: 0.75rem;
-    height: 0.75rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
-    stroke-linecap: round;
-  }
-
-  .pane-block {
-    max-width: 68ch;
-  }
-
-  .pane-block + .pane-block {
-    margin-top: calc(var(--unit) * 2.5);
-  }
-
-  .pane-block > p + p {
-    margin-top: 0.9em;
-  }
-
-  .pane-label {
-    margin-bottom: 0.75rem;
-    font-family: var(--font-heading);
-    font-weight: 500;
-    font-size: 0.875rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-
-  .pane-label a,
-  .pane-strong {
-    color: var(--color-ink);
-  }
-
-  .pane-list {
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--unit) * 1.5);
-  }
-
-  .pane-entry > p + p {
-    margin-top: 0.4em;
-  }
-
-  .pane-entry-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .pane-strong {
-    font-weight: 500;
-  }
-
-  .pane-muted {
-    color: var(--color-muted);
-  }
-
-  .pane-nowrap {
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .pane-rich strong {
-    font-weight: 500;
-    color: var(--color-ink);
-  }
-
-  .pane-tags {
-    font-size: 0.875rem;
-    color: var(--color-muted);
-  }
-
-  .pane-links {
-    display: inline-flex;
-    gap: 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  .pane-defs {
-    display: grid;
-    gap: 0.6rem;
-  }
-
-  .pane-defs > div {
-    display: grid;
-    grid-template-columns: 7rem 1fr;
-    gap: 1rem;
-  }
-
-  .pane-disclosure-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 2.75rem;
-    cursor: pointer;
-    list-style: none;
-  }
-
-  .pane-disclosure-trigger::-webkit-details-marker {
+  .pane-layer::-webkit-scrollbar {
     display: none;
   }
 
-  .pane-disclosure-trigger::marker {
-    content: "";
+  .scroll-progress {
+    position: fixed;
+    top: 0;
+    inset-inline: 0;
+    z-index: 50;
+    height: 2px;
+    pointer-events: none;
   }
 
-  .pane-disclosure-trigger:focus-visible {
-    border-radius: 2px;
-    outline: 2px solid var(--color-link);
-    outline-offset: 4px;
+  .scroll-progress-fill {
+    height: 100%;
+    width: 100%;
+    background: #fff;
+    transform: scaleX(var(--scroll-progress, 0));
+    transform-origin: left center;
   }
 
-  .pane-disclosure-role {
-    display: flex;
-    flex: 1;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.35rem 1rem;
-  }
-
-  .pane-disclosure-heading {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.55rem;
-  }
-
-  .pane-role-current {
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-  }
-
-  .pane-disclosure-chevron {
-    width: 0.85rem;
-    height: 0.85rem;
-    flex: 0 0 auto;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.2;
-    transition: transform var(--pane-motion-duration) var(--pane-motion-ease);
-  }
-
-  .pane-disclosure[open] > .pane-disclosure-trigger .pane-disclosure-chevron {
-    transform: rotate(180deg);
-  }
-
-  .pane-disclosure-content {
-    max-width: 68ch;
-    padding: 0.65rem 1.75rem 0 0;
-  }
-
-  .pane-role-details > p + p {
-    margin-top: 0.65em;
-  }
-
-  .pane-role-details .pane-tags {
-    margin-top: 0.7em;
-  }
-
-  .tech-icon {
-    display: inline-flex;
-    width: 1.1rem;
-    height: 1.1rem;
-    flex: 0 0 1.1rem;
-    align-items: center;
-    justify-content: center;
-    color: #d4d4d4;
-  }
-
+  /* Tech SVGs ship their brand colors; tint every painted part with the icon's color. */
   .tech-icon-svg {
     display: block;
     width: 100%;
@@ -513,370 +217,15 @@
     stroke: none !important;
   }
 
-  .separator {
-    box-sizing: border-box;
-    display: block;
-    width: 100%;
-    height: 0;
-    margin: 0;
-    border: 0;
-    border-top: 1px solid var(--line);
-  }
-
-  .pane .separator {
-    width: calc(100% + 2 * var(--unit));
-    margin-inline: calc(-1 * var(--unit));
-  }
-
-  .pane > .separator {
-    margin-block: calc(var(--unit) * 1.5);
-  }
-
-  .pane-stack-list {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    margin-top: 0.35rem;
-  }
-
-  .pane-stack-list::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 9.75rem;
-    z-index: 0;
-    width: 0;
-    border-left: 1px dashed var(--line);
-    pointer-events: none;
-  }
-
-  .pane-stack-row {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: 9.75rem minmax(0, 1fr);
-    align-items: start;
-    column-gap: 1rem;
-    min-width: 0;
-    padding: 0.95rem 0;
-  }
-
-  .pane-stack-label {
-    margin: 0;
-    padding-right: 0.75rem;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    line-height: 1.4;
-  }
-
-  .pane-stack-icons {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .tech-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0;
-    padding: 0.28rem 0.55rem 0.28rem 0.4rem;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: color-mix(in srgb, #ffffff 4%, var(--color-surface));
-    color: var(--color-ink);
-    font-size: 0.75rem;
-    font-weight: 500;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  .tech-chip .tech-icon {
-    width: 0.9rem;
-    height: 0.9rem;
-    flex-basis: 0.9rem;
-  }
-
-  .tech-chip-label {
-    color: var(--color-link);
-  }
-
-  .education-entry + .separator {
-    margin-block: calc(var(--unit) * 1.25);
-  }
-
-  .pane-education > .pane-label + .education-entry {
-    margin-top: 0.85rem;
-  }
-
-  .education-entry .work-company-brand {
-    gap: 0.7rem;
-  }
-
-  .education-institution-line {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.4rem 0.55rem;
-    min-width: 0;
-  }
-
-  .education-abbreviation {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.12rem 0.35rem;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    color: var(--color-muted);
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-  }
-
-  .education-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .education-tags li {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: color-mix(in srgb, #ffffff 3%, var(--color-surface));
-    color: var(--color-muted);
-    font-size: 0.7rem;
-    line-height: 1.2;
-  }
-
-  .work-company-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 1.25rem;
-  }
-
-  .work-company-brand {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 0.7rem;
-  }
-
-  .work-company-logo {
-    display: flex;
-    width: 1.85rem;
-    height: 1.85rem;
-    flex: 0 0 1.85rem;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 999px;
-    background: color-mix(in srgb, #ffffff 6%, var(--color-surface));
-  }
-
-  .work-company-logo img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: grayscale(1) brightness(0) invert(1);
-    opacity: 0.88;
-  }
-
-  .work-company-name {
-    margin: 0;
-    min-width: 0;
-    color: var(--color-ink);
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.3;
-  }
-
-  .work-company-name a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .work-company-name a:hover {
-    color: var(--color-link);
-  }
-
-  .work-company-place {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 0.82rem;
-    line-height: 1.35;
-    text-align: right;
-  }
-
-  .work-roles {
-    --work-rail-x: 0.925rem;
-    --work-icon-size: 1.85rem;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 1.35rem;
-    margin: 1.15rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .work-roles::before {
-    content: "";
-    position: absolute;
-    top: 0.15rem;
-    bottom: 0.15rem;
-    left: var(--work-rail-x);
-    z-index: 0;
-    width: 0;
-    border-left: 1px solid var(--line);
-    transform: translateX(-0.5px);
-    pointer-events: none;
-  }
-
-  .work-role {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: var(--work-icon-size) minmax(0, 1fr);
-    gap: 0.75rem 0.85rem;
-    align-items: start;
-  }
-
-  .work-role-icon {
-    display: flex;
-    width: var(--work-icon-size);
-    height: var(--work-icon-size);
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--line);
-    border-radius: 0.4rem;
-    background: color-mix(in srgb, #ffffff 5%, var(--color-surface));
-    color: var(--color-muted);
-  }
-
-  .work-role-icon-svg {
-    display: block;
-    width: 0.95rem;
-    height: 0.95rem;
-  }
-
-  .work-role-body {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-  }
-
-  .work-role-disclosure > .pane-disclosure-trigger {
-    align-items: flex-start;
-    min-height: 0;
-    gap: 0.75rem;
-  }
-
-  .work-role-disclosure > .pane-disclosure-trigger > .pane-disclosure-label {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .work-role-disclosure > .pane-disclosure-trigger .pane-disclosure-chevron {
-    margin-top: 0.35rem;
-  }
-
-  .work-role-disclosure > .pane-disclosure-content {
-    max-width: none;
-    padding: 0.55rem 0 0;
-  }
-
-  .work-role-summary {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.3rem;
-    min-width: 0;
-  }
-
-  .work-role-title {
-    color: var(--color-ink);
-    font-size: 0.95rem;
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  .work-role-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 0.45rem;
-    color: var(--color-muted);
-    font-size: 0.78rem;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.4;
-  }
-
-  .work-role-meta-sep {
-    color: color-mix(in srgb, var(--color-muted) 70%, transparent);
-  }
-
-  .work-role-bullets {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    margin: 0;
-    padding-left: 1.1rem;
-    color: var(--color-link);
-    font-size: 0.875rem;
-    line-height: 1.45;
-  }
-
-  .work-role-bullets li::marker {
-    color: var(--color-muted);
-  }
-
-  .work-role-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .pane-project-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem 1rem;
-  }
-
-  .pane-project-head > a {
-    min-width: 0;
-  }
-
   @supports selector(details::details-content) {
-    .pane-disclosure::details-content {
+    .disclosure::details-content {
       opacity: 0;
       transition:
         opacity var(--pane-opacity-duration) var(--pane-motion-ease),
         content-visibility var(--pane-motion-duration) allow-discrete;
     }
 
-    .pane-disclosure[open]::details-content {
+    .disclosure[open]::details-content {
       opacity: 1;
     }
   }
@@ -886,7 +235,7 @@
       interpolate-size: allow-keywords;
     }
 
-    .pane-disclosure::details-content {
+    .disclosure::details-content {
       block-size: 0;
       overflow: clip;
       transition:
@@ -895,7 +244,7 @@
         content-visibility var(--pane-motion-duration) allow-discrete;
     }
 
-    .pane-disclosure[open]::details-content {
+    .disclosure[open]::details-content {
       block-size: auto;
     }
   }
@@ -905,10 +254,6 @@
       --pane-motion-duration: 120ms;
       --pane-opacity-duration: 120ms;
     }
-
-    .pane-disclosure-chevron {
-      transition: none;
-    }
   }
 
   @media (max-width: 899px) {
@@ -917,6 +262,12 @@
     body:not(:has([data-lost])) > main {
       height: auto;
       overflow: visible;
+      scrollbar-width: none;
+    }
+
+    html:not(:has([data-lost]))::-webkit-scrollbar,
+    body:not(:has([data-lost]))::-webkit-scrollbar {
+      display: none;
     }
 
     .shell:not([data-lost]) {
@@ -953,10 +304,6 @@
       inset: auto;
       width: auto;
       overflow: visible;
-    }
-
-    .deck {
-      height: auto;
     }
 
     .shell-pane {

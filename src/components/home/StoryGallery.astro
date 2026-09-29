@@ -1,0 +1,8 @@
+---
+import StorySpread from "./StorySpread.astro";
+import { loadStorySpreads } from "../../data/story";
+
+const spreads = Object.values(await loadStorySpreads());
+---
+
+{spreads.map((spread) => <StorySpread spread={spread} sizes="60vw" />)}

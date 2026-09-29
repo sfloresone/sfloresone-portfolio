@@ -21,7 +21,7 @@ const base = hex("#4a4a4a");
 
 export const themes: Record<ThemeId, Theme> = {
   home: { base, crest: hex("#f2f2f2") },
-  about: { base, crest: hex("#ffc98f") },
+  about: { base, crest: hex("#ffffff") },
   work: { base, crest: hex("#9dc0ff") },
   blog: { base, crest: hex("#8fecbd") },
 };

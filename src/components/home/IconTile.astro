@@ -1,0 +1,26 @@
+---
+interface Props {
+  /** A logo image, whitened to match the ink; without it the slot (an icon) is shown. */
+  src?: string;
+  class?: string;
+  imgClass?: string;
+}
+
+const { src, class: className, imgClass } = Astro.props;
+---
+
+<span class:list={["flex shrink-0 items-center justify-center", className]} aria-hidden={src ? undefined : "true"}>
+  {
+    src ? (
+      <img
+        class:list={["block size-full object-contain brightness-0 invert", imgClass]}
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+    ) : (
+      <slot />
+    )
+  }
+</span>

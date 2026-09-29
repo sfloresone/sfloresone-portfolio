@@ -1,0 +1,43 @@
+---
+import Pane from "../Pane.astro";
+import StorySpread from "../StorySpread.astro";
+import { story } from "../../../data/site";
+import { loadStorySpreads, type StorySpread as Spread } from "../../../data/story";
+
+const spreads = await loadStorySpreads();
+
+const blocks: { spread: Spread; paragraphs: string[] }[] = [
+  {
+    spread: spreads.skyline,
+    paragraphs: [
+      "Madrid is where most of what I build starts: between classes at the Universidad Politécnica and the peer-to-peer sessions at 42 Madrid.",
+    ],
+  },
+  {
+    spread: spreads.madrid,
+    paragraphs: ["Somewhere between flights, I keep sketching the next thing I want to ship."],
+  },
+];
+---
+
+<Pane id="about" title={story.label} closeHref="/about">
+  <div class="flex max-w-[68ch] flex-col gap-10">
+    {
+      blocks.map(({ spread, paragraphs }) => (
+        <section class="flex flex-col gap-4" data-spread={spread.id}>
+          {paragraphs.map((text) => (
+            <p>{text}</p>
+          ))}
+          <div
+            class:list={[
+              "relative hidden w-full max-[900px]:block",
+              spread.layout === "full" ? "aspect-[5/4]" : "aspect-[4/5]",
+            ]}
+          >
+            <StorySpread spread={spread} sizes="100vw" developed />
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</Pane>

@@ -1,107 +1,42 @@
 ---
 import Pane from "../Pane.astro";
-import Disclosure from "../Disclosure.astro";
+import SectionLabel from "../SectionLabel.astro";
 import Separator from "../Separator.astro";
-import TechChip from "../TechChip.astro";
+import ExperienceItem from "../work/ExperienceItem.astro";
 import { featuredProjects, workExperiences } from "../../../data/site";
-import { formatRoleRange, formatTenure } from "../../../lib/tenure";
 ---
 
 <Pane id="work">
   {
     workExperiences.map((work, index) => (
       <>
-        {index > 0 && <Separator />}
-        <section class="pane-block work-company" aria-labelledby={`work-company-${index}`}>
-          <header class="work-company-header">
-            <div class="work-company-brand">
-              <div class="work-company-logo">
-                <img src={work.logo} alt="" loading="lazy" decoding="async" />
-              </div>
-              <h2 class="work-company-name" id={`work-company-${index}`}>
-                <a href={work.url} target="_blank" rel="noopener noreferrer">
-                  {work.company}
-                </a>
-              </h2>
-            </div>
-            <p class="work-company-place">
-              {work.location} ({work.arrangement})
-            </p>
-          </header>
-
-          <ul class="work-roles">
-            {work.roles.map((role) => (
-              <li class="work-role">
-                <div class="work-role-icon" aria-hidden="true">
-                  <svg viewBox="0 0 16 16" class="work-role-icon-svg">
-                    <path
-                      d="M5.5 4.25 2.75 8 5.5 11.75M10.5 4.25 13.25 8 10.5 11.75"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.4"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </div>
-
-                <div class="work-role-body">
-                  <Disclosure class="work-role-disclosure">
-                    <span slot="summary" class="work-role-summary">
-                      <span class="work-role-title">{role.title}</span>
-                      <span class="work-role-meta">
-                        <span>{role.type}</span>
-                        <span class="work-role-meta-sep" aria-hidden="true">|</span>
-                        <span>{formatRoleRange(role.start, role.end)}</span>
-                        <span class="work-role-meta-sep" aria-hidden="true">|</span>
-                        <span>{formatTenure(role.start, role.end)}</span>
-                      </span>
-                    </span>
-
-                    <ul class="work-role-bullets">
-                      {role.bullets.map((bullet) => (
-                        <li>{bullet}</li>
-                      ))}
-                    </ul>
-                  </Disclosure>
-
-                  <ul class="work-role-tags" aria-label={`Stack for ${role.title}`}>
-                    {role.tags.map((name) => (
-                      <li>
-                        <TechChip name={name} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {index > 0 && <Separator class="my-7.5" />}
+        <ExperienceItem work={work} index={index} />
       </>
     ))
   }
 
-  <Separator />
+  <Separator class="my-7.5" />
 
-  <section class="pane-block" aria-labelledby="work-projects">
-    <h2 class="pane-label" id="work-projects">Projects</h2>
-    <ul class="pane-list">
+  <section class="max-w-[68ch]" aria-labelledby="work-projects">
+    <SectionLabel id="work-projects">Projects</SectionLabel>
+    <ul class="flex flex-col gap-7.5">
       {
         featuredProjects.map((project) => (
-          <li class="pane-entry">
-            <div class="pane-project-head">
-              <a class="pane-strong" href={project.projectHref}>
+          <li>
+            <div class="flex items-baseline justify-between gap-x-4 gap-y-3">
+              <a class="pane-link min-w-0 font-medium text-ink" href={project.projectHref}>
                 {project.title}
               </a>
               {(project.projectHref !== project.githubHref || project.liveHref) && (
-                <span class="pane-links">
+                <span class="inline-flex gap-3 text-[0.875rem]">
                   {project.projectHref !== project.githubHref && (
-                    <a href={project.githubHref} target="_blank" rel="noopener noreferrer">
+                    <a class="pane-link" href={project.githubHref} target="_blank" rel="noopener noreferrer">
                       GitHub
                     </a>
                   )}
                   {project.liveHref && (
-                    <a href={project.liveHref} target="_blank" rel="noopener noreferrer">
+                    <a class="pane-link" href={project.liveHref} target="_blank" rel="noopener noreferrer">
                       Live
                     </a>
                   )}

@@ -10,14 +10,23 @@ const { active } = Astro.props;
 const externalSocials = socials.flatMap((link) =>
   link.href.startsWith("http") || link.href.startsWith("mailto:") ? [link] : [],
 );
+
+const linkClass =
+  "inline-flex min-h-[1.85em] items-center gap-[0.4em] text-muted transition-[color] duration-300 ease-linear hover:text-ink focus-visible:text-ink";
 ---
 
-<div class="deck">
-  <header class="deck-head">
-    <div class="deck-brand">
-      <a href="/" class="deck-name" data-deck-home>{site.name}</a>
+<div class="relative flex h-full flex-col gap-7.5 p-unit leading-normal max-[900px]:h-auto">
+  <header class="relative pr-8">
+    <div>
+      <a
+        href="/"
+        class="block w-max max-w-full font-heading text-[length:clamp(1.5rem,2.4vw,1.85rem)] leading-[1.1] font-semibold tracking-[-0.02em] whitespace-nowrap"
+        data-deck-home
+      >
+        {site.name}
+      </a>
       <img
-        class="deck-mascot"
+        class="absolute top-0 right-0 size-8 object-contain opacity-85"
         src="/black-personal-logo-3D.png"
         alt=""
         width="72"
@@ -25,23 +34,26 @@ const externalSocials = socials.flatMap((link) =>
         decoding="async"
       />
     </div>
-    <p class="deck-intro">{intro}</p>
+    <p class="mt-[0.85rem] max-w-[28ch] text-muted">{intro}</p>
   </header>
 
-  <nav class="deck-nav" aria-label="Sections">
-    <ul>
+  <nav aria-label="Sections">
+    <ul class="flex flex-col items-start">
       {
         sections.map((section) => (
           <li>
             <a
               href={section.href}
-              class="deck-link"
+              class:list={["group", linkClass, "aria-[current=page]:text-ink"]}
               data-deck-link={section.id}
               data-astro-prefetch="hover"
               aria-current={section.id === active ? "page" : undefined}
             >
               <span>{section.label}</span>
-              <span class="deck-link-mark" aria-hidden="true" />
+              <span
+                class="size-[0.45em] scale-40 rounded-full bg-current opacity-0 transition-[opacity,scale] duration-300 ease-[ease] group-aria-[current=page]:scale-100 group-aria-[current=page]:opacity-100"
+                aria-hidden="true"
+              />
             </a>
           </li>
         ))
@@ -49,15 +61,52 @@ const externalSocials = socials.flatMap((link) =>
     </ul>
   </nav>
 
-  <ul class="deck-socials">
+  <ul class="mt-auto flex flex-col items-start">
     {
-      externalSocials.map((link) => (
-        <li>
-          <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
-            {link.label}
-          </a>
-        </li>
-      ))
+      externalSocials.map((link) => {
+        const isMailto = link.href.startsWith("mailto:");
+        const email = isMailto ? link.href.slice("mailto:".length) : null;
+
+        return (
+          <li>
+            {isMailto && email ? (
+              <a class={linkClass} href={link.href} data-copy-email={email} data-copy-label={link.label}>
+                {link.label}
+              </a>
+            ) : (
+              <a class={linkClass} href={link.href} target="_blank" rel="noopener noreferrer">
+                {link.label}
+              </a>
+            )}
+          </li>
+        );
+      })
     }
   </ul>
 </div>
+
+<script>
+  document.querySelectorAll("[data-copy-email]").forEach((node) => {
+    const el = node instanceof HTMLAnchorElement ? node : null;
+    if (!el) return;
+
+    el.addEventListener("click", async (event) => {
+      event.preventDefault();
+      const email = el.getAttribute("data-copy-email");
+      const label = el.getAttribute("data-copy-label") ?? "Email";
+      if (!email || el.dataset.copying === "1") return;
+
+      try {
+        await navigator.clipboard.writeText(email);
+        el.dataset.copying = "1";
+        el.textContent = "Copied!";
+        setTimeout(() => {
+          el.textContent = label;
+          delete el.dataset.copying;
+        }, 2000);
+      } catch {
+        window.location.href = el.href;
+      }
+    });
+  });
+</script>

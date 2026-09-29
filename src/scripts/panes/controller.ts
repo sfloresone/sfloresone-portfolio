@@ -1,8 +1,12 @@
 import { navigate, swapFunctions } from "astro:transitions/client";
 import type { TransitionBeforePreparationEvent, TransitionBeforeSwapEvent } from "astro:transitions/client";
-import type { SectionId } from "../../data/site";
+import { shellPaths, type SectionId } from "../../data/site";
+import { watchSpreads } from "./spreads";
 import { RevealGrid } from "./reveal-grid";
-import { announceIntent, announceLost, announceSection, isSectionId, paneState } from "./state";
+import { announceIntent, announceLost, announceSection, isSectionId, paneState, routeKey } from "./state";
+
+/** How long a leaving gallery spread keeps fading before it is dropped. */
+const galleryFadeMs = 700;
 
 let grid: RevealGrid | null = null;
 
@@ -23,9 +27,41 @@ function isLost(shell: HTMLElement): boolean {
 }
 
 function isKnownPath(pathname: string): boolean {
-  const path = pathname.replace(/\/+$/, "") || "/";
+  return shellPaths.includes(routeKey(pathname));
+}
 
-  return path === "/" || path === "/about" || path === "/work" || path === "/blog";
+function newestLayer(): HTMLElement | null {
+  const layers = document.querySelectorAll<HTMLElement>("[data-pane-slot] > [data-pane-layer]");
+
+  return layers[layers.length - 1] ?? null;
+}
+
+function gallerySpreads(doc: Document): HTMLElement[] {
+  return [...doc.querySelectorAll<HTMLElement>("[data-gallery] [data-gallery-spread]:not([data-leaving])")];
+}
+
+function spreadKeys(spreads: HTMLElement[]): string {
+  return spreads.map((spread) => spread.dataset.gallerySpread).join("\n");
+}
+
+/** Fades out the gallery spreads on screen and adopts the next page's. */
+function swapGallery(newDocument: Document): void {
+  const gallery = document.querySelector<HTMLElement>("[data-gallery]");
+
+  if (!gallery) return;
+
+  const incoming = gallerySpreads(newDocument);
+  const outgoing = gallerySpreads(document);
+
+  if (spreadKeys(incoming) === spreadKeys(outgoing)) return;
+
+  for (const spread of outgoing) {
+    spread.setAttribute("data-leaving", "");
+    spread.removeAttribute("data-developed");
+    setTimeout(() => spread.remove(), galleryFadeMs);
+  }
+
+  gallery.append(...incoming.map((spread) => document.adoptNode(spread)));
 }
 
 function syncDeck(active: SectionId | null): void {
@@ -70,6 +106,7 @@ function enterLost(shell: HTMLElement): void {
   shell.dataset.active = "";
   syncDeck(null);
   document.title = "404 — Sergio Flores";
+  watchSpreads(null);
   announceLost(true);
 }
 
@@ -99,8 +136,10 @@ function swapPane(newDocument: Document): void {
 
   shell.dataset.active = to ?? "";
   syncDeck(to);
+  swapGallery(newDocument);
   announceSection(to);
-  reveal.show(to, nextLayer ? document.adoptNode(nextLayer) : null);
+  reveal.show(to, routeKey(nextLayer?.dataset.paneLayer ?? ""), nextLayer ? document.adoptNode(nextLayer) : null);
+  watchSpreads(to ? newestLayer() : null);
 }
 
 /**
@@ -167,6 +206,8 @@ function onDeckClick(event: MouseEvent): void {
 
   if (!link || link.getAttribute("aria-current") !== "page") return;
 
+  if (routeKey(link.pathname) !== routeKey(location.pathname)) return;
+
   event.preventDefault();
   void navigate("/");
 }
@@ -197,6 +238,7 @@ function syncFromDocument(): void {
   currentGrid();
   syncDeck(active);
   announceSection(active);
+  watchSpreads(newestLayer());
 }
 
 export function initPanes(): void {

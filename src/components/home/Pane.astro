@@ -3,18 +3,42 @@ import { sectionById, type SectionId } from "../../data/site";
 
 interface Props {
   id: SectionId;
+  title?: string;
+  closeHref?: string;
 }
 
-const { id } = Astro.props;
+const { id, closeHref = "/" } = Astro.props;
 
-const section = sectionById(id);
+const title = Astro.props.title ?? sectionById(id).label;
 ---
 
-<article class="pane" data-pane={id} aria-labelledby={`pane-title-${id}`}>
-  <header class="pane-head">
-    <h1 class="pane-title" id={`pane-title-${id}`} tabindex="-1">{section.label}</h1>
-    <a href="/" class="pane-close" data-pane-close aria-label={`Close ${section.label}`}>
-      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"></path></svg>
+<article class="p-unit leading-[1.6]" data-pane={id} aria-labelledby={`pane-title-${id}`}>
+  <header class="relative mb-7.5 pr-8">
+    <h1
+      class="font-heading text-[length:clamp(1.35rem,2vw,1.5rem)] leading-[1.15] font-semibold tracking-[-0.02em] outline-none"
+      id={`pane-title-${id}`}
+      tabindex="-1"
+      data-pane-title
+    >
+      {title}
+    </h1>
+    <a
+      href={closeHref}
+      class="absolute top-1/2 right-0 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-chip text-ink transition-[color] duration-300 ease-linear hover:bg-ink hover:text-[#121212] focus-visible:bg-ink focus-visible:text-[#121212]"
+      data-pane-close
+      aria-label={`Close ${title}`}
+    >
+      <svg
+        class="size-3"
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-width="1.4"
+        aria-hidden="true"
+      >
+        <path d="M3.5 3.5l5 5M8.5 3.5l-5 5"></path>
+      </svg>
     </a>
   </header>
   <slot />

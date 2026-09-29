@@ -4,8 +4,8 @@ import {
   isRevealOpen,
   revealFrontCol,
 } from "../../scripts/panes/controller";
-import { onLostChange, onSectionChange, onSectionIntent, paneState } from "../../scripts/panes/state";
-import type { Field, SceneModule } from "./types";
+import { onLostChange, onSpreadChange, onSectionChange, onSectionIntent, paneState } from "../../scripts/panes/state";
+import type { Field, Placement, SceneLayout, SceneModule } from "./types";
 
 interface NetworkHints {
   saveData?: boolean;
@@ -23,7 +23,11 @@ let sceneModule: Promise<SceneModule> | null = null;
 
 let lostRequest = 0;
 
+let spreadRequest = 0;
+
 const readyWaiters: Array<(current: Field) => void> = [];
+
+let spreadFrames: ResizeObserver | null = null;
 
 function fieldCanvas(): HTMLCanvasElement | null {
   return document.querySelector<HTMLCanvasElement>("[data-field-canvas]");
@@ -35,6 +39,16 @@ function shellRoot(): HTMLElement | null {
 
 function setLostReady(ready: boolean): void {
   shellRoot()?.classList.toggle("is-lost-ready", ready);
+}
+
+function layoutOf(canvas: HTMLCanvasElement): SceneLayout {
+  const pane = document.querySelector<HTMLElement>("[data-pane-slot]")?.getBoundingClientRect().right ?? 0;
+
+  return {
+    width: Math.max(1, canvas.clientWidth),
+    height: Math.max(1, canvas.clientHeight),
+    band: Math.max(0, pane - canvas.getBoundingClientRect().left),
+  };
 }
 
 function capable(canvas: HTMLCanvasElement): boolean {
@@ -100,17 +114,7 @@ async function paintLost(current: Field): Promise<void> {
 
   const { textScene } = await import("./scenes/drawings");
 
-  const layout = {
-    width: Math.max(1, canvas.clientWidth),
-    height: Math.max(1, canvas.clientHeight),
-    band: Math.max(
-      0,
-      (document.querySelector<HTMLElement>("[data-pane-slot]")?.getBoundingClientRect().right ?? 0) -
-        canvas.getBoundingClientRect().left,
-    ),
-  };
-
-  const scene = await textScene("404", layout, { weight: 600 });
+  const scene = await textScene("404", layoutOf(canvas), { weight: 600 });
 
   if (request !== lostRequest || field !== current || !paneState.lost) return;
 
@@ -134,6 +138,125 @@ function clearLost(current: Field): void {
   lostRequest += 1;
   setLostReady(false);
   current.setScene(null);
+}
+
+function gallerySpreads(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>("[data-gallery] [data-gallery-spread]:not([data-leaving])")];
+}
+
+function allSpreads(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>("[data-gallery-spread]")];
+}
+
+async function frameSpreadElement(spread: HTMLElement): Promise<void> {
+  const { frameSpread } = await import("./scenes/cover");
+  const photos = [...spread.querySelectorAll<HTMLImageElement>("[data-spread-photo]")];
+
+  await Promise.all(
+    photos.map((photo) => {
+      if (photo.complete && photo.naturalWidth > 0) return Promise.resolve();
+
+      return photo.decode().catch(
+        () =>
+          new Promise<void>((resolve) => {
+            photo.addEventListener("load", () => resolve(), { once: true });
+            photo.addEventListener("error", () => resolve(), { once: true });
+          }),
+      );
+    }),
+  );
+  frameSpread(spread);
+}
+
+function watchSpreadFrames(): void {
+  spreadFrames?.disconnect();
+  spreadFrames = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.target instanceof HTMLElement) void frameSpreadElement(entry.target);
+    }
+  });
+
+  for (const spread of allSpreads()) {
+    spreadFrames.observe(spread);
+    void frameSpreadElement(spread);
+  }
+}
+
+/** Fades in the gallery spread `id` and fades out the rest. */
+function develop(id: string | null): void {
+  for (const spread of gallerySpreads()) {
+    const on = spread.dataset.gallerySpread === id;
+
+    spread.toggleAttribute("data-developed", on);
+
+    if (on) void frameSpreadElement(spread);
+  }
+}
+
+/** Sweeps the spread in as a halftone right where its photos sit, then develops the real ones. */
+async function revealSpread(current: Field, id: string, request: number): Promise<void> {
+  const canvas = fieldCanvas();
+  const spread = gallerySpreads().find((candidate) => candidate.dataset.gallerySpread === id);
+
+  if (!canvas || !spread) return;
+
+  const photos = [...spread.querySelectorAll<HTMLImageElement>("[data-spread-photo]")];
+  const box = spread.getBoundingClientRect();
+  const origin = canvas.getBoundingClientRect();
+  const placement: Placement = { x: box.left - origin.left, y: box.top - origin.top, width: box.width, height: box.height };
+  const seam = Number.parseFloat(getComputedStyle(spread).getPropertyValue("--seam")) || 0;
+
+  const [{ spreadScene }, { frameSpread }] = await Promise.all([
+    import("./scenes/drawings"),
+    import("./scenes/cover"),
+  ]);
+
+  await Promise.all(photos.map((photo) => photo.decode().catch(() => {})));
+  frameSpread(spread);
+
+  const scene = await spreadScene(
+    photos.map((photo) => photo.getAttribute("src") ?? ""),
+    layoutOf(canvas),
+    {
+      layout: spread.dataset.layout === "diagonal" ? "diagonal" : "full",
+      placement,
+      seam,
+    },
+  );
+
+  if (request !== spreadRequest || field !== current) return;
+
+  current.setOverride(scene);
+  await current.whenSceneIdle();
+
+  if (request === spreadRequest) develop(id);
+}
+
+function showSpread(id: string | null): void {
+  const request = ++spreadRequest;
+  const canvas = fieldCanvas();
+
+  develop(null);
+
+  if (!id) {
+    field?.setOverride(null);
+
+    return;
+  }
+
+  if (!canvas || !capable(canvas) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    develop(id);
+  }
+
+  if (!canvas || !capable(canvas)) return;
+
+  whenField((current) => {
+    if (request === spreadRequest) void revealSpread(current, id, request);
+  });
+
+  void booting?.then(() => {
+    if (!field && request === spreadRequest) develop(id);
+  });
 }
 
 function boot(): void {
@@ -216,6 +339,10 @@ export function initField(): void {
     void upgrade().then(() => field?.prewarm(id));
   });
 
+  onSpreadChange(showSpread);
+
+  if (paneState.spread) showSpread(paneState.spread);
+
   onLostChange((lost) => {
     whenField((current) => {
       if (lost) void paintLost(current);
@@ -227,6 +354,10 @@ export function initField(): void {
     if (!event.newDocument.querySelector("[data-field-canvas]")) teardown();
   });
 
-  document.addEventListener("astro:page-load", boot);
+  document.addEventListener("astro:page-load", () => {
+    boot();
+    watchSpreadFrames();
+  });
   boot();
+  watchSpreadFrames();
 }

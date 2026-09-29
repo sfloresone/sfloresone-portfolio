@@ -1,9 +1,15 @@
 ---
 interface Props {
   class?: string;
+  variant?: "line" | "diagonal";
 }
 
-const { class: className } = Astro.props;
+const { class: className, variant = "line" } = Astro.props;
+
+const variantClass =
+  variant === "diagonal"
+    ? "h-8 border-t-0 border-b border-line bg-[repeating-linear-gradient(315deg,var(--color-line)_0,var(--color-line)_1px,transparent_0,transparent_50%)] bg-size-[10px_10px]"
+    : "border-line";
 ---
 
-<hr class:list={["separator", className]} />
+<hr class:list={["-mx-unit w-[calc(100%+2*var(--spacing-unit))]", variantClass, className]} />

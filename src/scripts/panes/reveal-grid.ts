@@ -1,5 +1,5 @@
 import { sections, type SectionId } from "../../data/site";
-import { isSectionId, maxRevealRows, paneState, revealTuning } from "./state";
+import { isSectionId, maxRevealRows, paneState, revealTuning, routeKey } from "./state";
 
 /** A horizontal front across the pane column, or a vertical band over it. */
 interface Front {
@@ -17,6 +17,8 @@ interface Front {
 interface Layer {
   element: HTMLElement;
   section: SectionId;
+  /** Route key of the page this layer came from; a section can own several. */
+  route: string;
   /** Present while this layer is still sweeping over the one below it. */
   band: Front | null;
   focused: boolean;
@@ -64,6 +66,13 @@ function deckIndex(id: SectionId): number {
   return sections.findIndex((section) => section.id === id);
 }
 
+/** Down the deck, or deeper into the same section, sweeps downward. */
+function directionOf(from: Layer, section: SectionId, route: string): 1 | -1 {
+  if (section !== from.section) return deckIndex(section) > deckIndex(from.section) ? 1 : -1;
+
+  return route.startsWith(`${from.route}/`) ? 1 : -1;
+}
+
 /**
  * Owns the pane column's layers and the fronts that uncover them, one grid cell at a time.
  * Every reveal continues from where the previous one stands: a reversal keeps the front,
@@ -95,7 +104,14 @@ export class RevealGrid {
     const section = existing?.querySelector<HTMLElement>("[data-pane]")?.dataset.pane;
 
     if (existing && isSectionId(section)) {
-      this.#layers.push({ element: existing, section, band: null, focused: true, clip: "" });
+      this.#layers.push({
+        element: existing,
+        section,
+        route: routeKey(existing.dataset.paneLayer ?? ""),
+        band: null,
+        focused: true,
+        clip: "",
+      });
       this.#opening = true;
       this.#veil.position = this.#cols + lead;
       this.#open.fill(this.#cols);
@@ -165,29 +181,33 @@ export class RevealGrid {
     return sum / this.#rows;
   }
 
-  /** Shows `section` (or closes the column when `null`); `incoming` is its freshly adopted layer. */
-  show(section: SectionId | null, incoming: HTMLElement | null): void {
+  /**
+   * Shows the `route` page of `section` (or closes the column when `null`);
+   * `incoming` is its freshly adopted layer.
+   */
+  show(section: SectionId | null, route: string, incoming: HTMLElement | null): void {
     const top = this.#layers.at(-1);
 
     if (!section || !incoming) {
       this.#opening = false;
-    } else if (top && top.section === section) {
+    } else if (top && top.route === route) {
       this.#opening = true;
     } else if (!top || this.#fullyClosed()) {
       for (const layer of this.#layers.splice(0)) layer.element.remove();
 
       this.slot.append(incoming);
-      this.#layers.push({ element: incoming, section, band: null, focused: false, clip: "" });
+      this.#layers.push({ element: incoming, section, route, band: null, focused: false, clip: "" });
       this.#veil = freshFront(-lead);
       this.#open.fill(0);
       this.#opening = true;
     } else {
-      const direction = deckIndex(section) > deckIndex(top.section) ? 1 : -1;
+      const direction = directionOf(top, section, route);
 
       this.slot.append(incoming);
       this.#layers.push({
         element: incoming,
         section,
+        route,
         band: freshFront(-revealTuning.bandRows - 1, direction),
         focused: false,
         clip: "",
@@ -337,12 +357,12 @@ export class RevealGrid {
     }
   }
 
-  /** Index of the layer showing on `row`, or -1 where a band or nothing covers it. */
   /** Rows travelled by `band` when it reaches `row`, so an upward band reads like a downward one. */
   #along(band: Front, row: number): number {
     return band.direction > 0 ? row : this.#rows - 1 - row;
   }
 
+  /** Index of the layer showing on `row`, or -1 where a band or nothing covers it. */
   #ownerOf(row: number): number {
     for (let i = this.#layers.length - 1; i >= 0; i--) {
       const band = this.#layers[i].band;
@@ -405,7 +425,7 @@ export class RevealGrid {
 
     if (uncovered && newest && !newest.focused) {
       newest.focused = true;
-      newest.element.querySelector<HTMLElement>(".pane-title")?.focus({ preventScroll: true });
+      newest.element.querySelector<HTMLElement>("[data-pane-title]")?.focus({ preventScroll: true });
     }
   }
 

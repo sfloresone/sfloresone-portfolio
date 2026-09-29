@@ -36,6 +36,8 @@ export interface Field {
    * With `fromCol`, the front starts at that column and runs right to left.
    */
   setScene(scene: SceneField | null, fromCol?: number): void;
+  /** Keeps `scene` on the field over any section scene; `null` hands it back to the section. */
+  setOverride(scene: SceneField | null): void;
   /** Resolves once any in-flight scene morph has settled. */
   whenSceneIdle(): Promise<void>;
   prewarm(id: SectionId): void;

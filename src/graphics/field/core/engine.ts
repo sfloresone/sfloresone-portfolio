@@ -92,6 +92,8 @@ class FieldEngine implements Field {
   #scenes: SceneModule | null = null;
   #section: SectionId | null = paneState.active;
   #shown: string | null = null;
+  /** Holds a scene over the section's own until it is cleared. */
+  #override = false;
   #sceneRequest = 0;
   #relayout: ReturnType<typeof setTimeout> | null = null;
   #disposed = false;
@@ -145,8 +147,19 @@ class FieldEngine implements Field {
   }
 
   setScene(scene: SceneField | null, fromCol?: number): void {
-    this.#slots.request(scene, fromCol);
-    this.#requestStill();
+    this.#sceneRequest += 1;
+    this.#shown = null;
+    this.#applyScene(scene, fromCol);
+  }
+
+  setOverride(scene: SceneField | null): void {
+    this.#override = scene !== null;
+    this.#sceneRequest += 1;
+    this.#shown = null;
+
+    if (scene) this.#applyScene(scene);
+    else if (this.#scenes) this.#showSection();
+    else this.#applyScene(null);
   }
 
   whenSceneIdle(): Promise<void> {
@@ -205,6 +218,11 @@ class FieldEngine implements Field {
     this.#requestStill();
   }
 
+  #applyScene(scene: SceneField | null, fromCol?: number): void {
+    this.#slots.request(scene, fromCol);
+    this.#requestStill();
+  }
+
   #layout(): SceneLayout {
     return { width: this.#cssWidth, height: this.#cssHeight, band: this.#bandWidth };
   }
@@ -214,6 +232,8 @@ class FieldEngine implements Field {
   }
 
   #showSection(): void {
+    if (this.#override) return;
+
     const id = this.#section;
     const key = id ? `${id}@${this.#layoutKey()}` : null;
 
@@ -223,7 +243,7 @@ class FieldEngine implements Field {
 
     if (!id) {
       this.#shown = null;
-      this.setScene(null);
+      this.#applyScene(null);
 
       return;
     }
@@ -237,7 +257,7 @@ class FieldEngine implements Field {
         if (request !== this.#sceneRequest || this.#disposed) return;
 
         this.#shown = key;
-        this.setScene(scene);
+        this.#applyScene(scene);
       },
       (error) => console.info("[field] scene failed", id, error),
     );

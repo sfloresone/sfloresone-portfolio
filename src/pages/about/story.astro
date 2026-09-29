@@ -1,0 +1,11 @@
+---
+import HomeShell from "../../components/home/HomeShell.astro";
+import StoryGallery from "../../components/home/StoryGallery.astro";
+import StoryPane from "../../components/home/panes/StoryPane.astro";
+import { story } from "../../data/site";
+---
+
+<HomeShell title={story.title} description={story.description} active="about">
+  <StoryPane />
+  <StoryGallery slot="gallery" />
+</HomeShell>

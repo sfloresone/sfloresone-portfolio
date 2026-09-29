@@ -1,0 +1,104 @@
+---
+import type { HTMLTag } from "astro/types";
+import Disclosure from "./Disclosure.astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+  as?: HTMLTag;
+  class?: string;
+  /** Side of the leading icon or logo, as a CSS length; the rail runs through its center. */
+  tile: string;
+  gap: string;
+  align?: "start" | "center";
+  /** Draw this item's own rail below the tile; otherwise the list draws one shared rail. */
+  ownRail?: boolean;
+  /** Close the rail with a curve on every item, or only on the last one of its list. */
+  railEnd?: "always" | "last";
+  title: string;
+  titleId?: string;
+  meta: string[];
+  bullets: string[];
+  bulletClass?: string;
+  tags: string[];
+  tagVariant?: "chip" | "muted";
+  tagsLabel: string;
+  "aria-labelledby"?: string;
+}
+
+const {
+  as: Element = "div",
+  class: className,
+  tile,
+  gap,
+  align = "start",
+  ownRail = false,
+  railEnd = "always",
+  title,
+  titleId,
+  meta,
+  bullets,
+  bulletClass,
+  tags,
+  tagVariant = "chip",
+  tagsLabel,
+  "aria-labelledby": labelledBy,
+} = Astro.props;
+---
+
+<Element
+  aria-labelledby={labelledBy}
+  class:list={[
+    "group/item relative z-1",
+    { "rail-line [--rail-top:var(--tile)] [--rail-x:calc(var(--tile)/2)]": ownRail },
+    className,
+  ]}
+  style={`--tile: ${tile}; --gap: ${gap}`}
+>
+  <div
+    class:list={[
+      "pointer-events-none absolute bottom-0 left-[calc(var(--tile)/2)] z-1 size-4 bg-surface",
+      railEnd === "always" ? "flex" : "hidden group-last/item:flex",
+    ]}
+    aria-hidden="true"
+  >
+    <span class="block size-full -translate-y-[0.55rem] rounded-bl-[0.25rem] border-b border-l border-line"></span>
+  </div>
+
+  <Disclosure align={align} contentClass="pl-[calc(var(--tile)+var(--gap))]">
+    <span slot="summary" class="flex w-full items-start gap-(--gap)">
+      <slot name="tile" />
+      <span class="flex min-h-(--tile) min-w-0 flex-1 flex-col justify-center gap-[0.3rem]">
+        <span class="text-[0.95rem] leading-[1.35] font-semibold text-ink" id={titleId}>{title}</span>
+        <span class="flex flex-wrap items-baseline gap-x-[0.45rem] gap-y-1 text-[0.78rem] leading-[1.4] text-muted tabular-nums">
+          {
+            meta.map((part, index) => (
+              <>
+                {index > 0 && <span class="text-muted/70" aria-hidden="true">|</span>}
+                <span>{part}</span>
+              </>
+            ))
+          }
+        </span>
+      </span>
+    </span>
+
+    <ul
+      class:list={[
+        "flex list-disc flex-col gap-[0.35rem] pl-5 text-[0.875rem] leading-[1.45] text-link marker:text-[color-mix(in_srgb,var(--color-muted)_85%,var(--color-ink))]",
+        bulletClass,
+      ]}
+    >
+      {bullets.map((bullet) => <li>{bullet}</li>)}
+    </ul>
+  </Disclosure>
+
+  <ul class="relative z-1 flex flex-wrap gap-[0.4rem] pt-3 pl-[calc(var(--tile)+var(--gap))]" aria-label={tagsLabel}>
+    {
+      tags.map((name) => (
+        <li class:list={{ flex: tagVariant === "muted" }}>
+          <Tag name={name} variant={tagVariant} />
+        </li>
+      ))
+    }
+  </ul>
+</Element>

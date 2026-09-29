@@ -16,6 +16,10 @@ const hasPane = Astro.slots.has("default");
 ---
 
 <Layout title={title} description={description}>
+  <div class="scroll-progress" aria-hidden="true">
+    <div class="scroll-progress-fill"></div>
+  </div>
+
   <div
     class="shell"
     data-shell
@@ -31,7 +35,7 @@ const hasPane = Astro.slots.has("default");
     <section class="shell-pane" data-pane-slot aria-live="polite">
       {
         hasPane && (
-          <div class="pane-layer" data-pane-layer>
+          <div class="pane-layer" data-pane-layer={Astro.url.pathname}>
             <slot />
           </div>
         )
@@ -42,17 +46,130 @@ const hasPane = Astro.slots.has("default");
       <canvas class="shell-canvas" data-field-canvas aria-hidden="true"></canvas>
     </div>
 
-    <div class="lost-ui">
-      <a class="lost-home" href="/">Home</a>
+    <div
+      class="pointer-events-none absolute top-(--rail) right-0 bottom-(--rail) left-[calc(var(--col2-left)+var(--pane-w))] z-2 max-[900px]:hidden in-data-lost:hidden"
+    >
+      <div class="absolute inset-0" data-gallery>
+        <slot name="gallery" />
+      </div>
+    </div>
+
+    <div
+      class="pointer-events-none absolute inset-[var(--rail)_0_var(--rail)_var(--rail)] z-5 hidden items-end justify-center pb-[clamp(3rem,12vh,6rem)] in-[.is-lost-ready]:flex"
+    >
+      <a
+        class="pointer-events-auto text-muted transition-[color] duration-300 ease-linear hover:text-ink focus-visible:text-ink focus-visible:outline-none"
+        href="/"
+      >
+        Home
+      </a>
     </div>
   </div>
+
+  <dialog
+    class="fixed inset-0 m-0 size-full max-h-none max-w-none overflow-hidden overscroll-none border-0 bg-transparent p-0 text-ink backdrop:bg-black/84 backdrop:opacity-0 backdrop:transition-opacity backdrop:duration-400 data-ready:backdrop:opacity-100 motion-reduce:backdrop:transition-none"
+    data-lightbox
+    aria-labelledby="lightbox-caption"
+  >
+    <div
+      class="absolute inset-0 scale-[0.98] opacity-0 transition-[opacity,transform] duration-400 ease-out data-ready:scale-100 data-ready:opacity-100 motion-reduce:scale-100 motion-reduce:transition-none"
+      data-lightbox-shell
+    >
+      <div
+        class="absolute inset-0 cursor-zoom-in overflow-hidden outline-none select-none touch-none data-zoomed:cursor-grab data-zoomed:active:cursor-grabbing focus-visible:shadow-[inset_0_0_0_1px_var(--color-ink)]"
+        data-lightbox-frame
+        tabindex="-1"
+        role="group"
+        aria-labelledby="lightbox-caption"
+      >
+        <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-14">
+          <img
+            class="max-h-full max-w-full origin-center object-contain select-none transition-transform duration-300 ease-out motion-reduce:transition-none"
+            data-lightbox-image
+            alt=""
+            draggable="false"
+            decoding="async"
+          />
+        </div>
+      </div>
+
+      <div class="pointer-events-none absolute inset-0 z-1 flex items-start justify-between gap-3 p-3 sm:p-4">
+        <p
+          class="pointer-events-auto m-0 max-w-[65%] truncate rounded-full bg-chip px-3 py-1.5 text-[0.8rem] text-ink"
+          id="lightbox-caption"
+          data-lightbox-caption
+        ></p>
+        <div class="pointer-events-auto flex items-center gap-2">
+          <button
+            type="button"
+            class="grid size-8 place-items-center rounded-full bg-chip text-ink transition-[color,background-color] duration-200 ease-linear hover:bg-ink hover:text-[#121212] focus-visible:bg-ink focus-visible:text-[#121212] focus-visible:outline-none"
+            data-lightbox-zoom
+            aria-label="Zoom in"
+          >
+            <svg width="15" height="15" viewBox="0 0 256 256" fill="none" aria-hidden="true">
+              <circle cx="116" cy="116" r="84" stroke="currentColor" stroke-width="16"></circle>
+              <path d="M175.4 175.4 224 224M84 116h64" stroke="currentColor" stroke-width="16" stroke-linecap="round"></path>
+              <path
+                class="transition-opacity duration-200 in-data-zoomed:opacity-0"
+                d="M116 84v64"
+                stroke="currentColor"
+                stroke-width="16"
+                stroke-linecap="round"
+              ></path>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="grid size-8 place-items-center rounded-full bg-chip text-ink transition-[color,background-color] duration-200 ease-linear hover:bg-ink hover:text-[#121212] focus-visible:bg-ink focus-visible:text-[#121212] focus-visible:outline-none"
+            data-lightbox-close
+            aria-label="Close"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
 </Layout>
 
 <script>
   import { initPanes } from "../../scripts/panes/controller";
   import { initField } from "../../graphics/field/mount";
+  import { initLightbox } from "../../scripts/lightbox";
 
   initPanes();
 
   initField();
+
+  initLightbox();
+
+  function scrollRoot(): HTMLElement {
+    const layer = document.querySelector<HTMLElement>("[data-pane-layer]");
+
+    if (layer) {
+      const style = getComputedStyle(layer);
+
+      if (style.overflowY === "auto" || style.overflowY === "scroll") return layer;
+    }
+
+    return document.scrollingElement instanceof HTMLElement
+      ? document.scrollingElement
+      : document.documentElement;
+  }
+
+  function updateScrollProgress() {
+    const root = scrollRoot();
+    const max = root.scrollHeight - root.clientHeight;
+    const progress = max > 0 ? Math.min(1, Math.max(0, root.scrollTop / max)) : 0;
+
+    document.documentElement.style.setProperty("--scroll-progress", String(progress));
+  }
+
+  document.addEventListener("scroll", updateScrollProgress, { capture: true, passive: true });
+
+  window.addEventListener("resize", updateScrollProgress, { passive: true });
+
+  updateScrollProgress();
 </script>

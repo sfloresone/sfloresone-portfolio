@@ -1,0 +1,55 @@
+---
+import type { StorySpread } from "../../data/story";
+
+interface Props {
+  spread: StorySpread;
+  sizes: string;
+  /** Shown from the start instead of waiting for the field to develop it. */
+  developed?: boolean;
+}
+
+const { spread, sizes, developed = false } = Astro.props;
+
+const clips =
+  spread.layout === "diagonal"
+    ? [
+        "[clip-path:polygon(calc(0%_-_var(--seam))_0,calc(100%_-_var(--seam))_0,calc(0%_-_var(--seam))_100%)]",
+        "[clip-path:polygon(calc(100%_+_var(--seam))_0,calc(100%_+_var(--seam))_100%,var(--seam)_100%)]",
+      ]
+    : [""];
+---
+
+<figure
+  class="absolute inset-0 m-0 opacity-0 transition-opacity duration-600 ease-out [--seam:10px] data-developed:opacity-100 motion-reduce:transition-none"
+  data-gallery-spread={spread.id}
+  data-layout={spread.layout}
+  data-developed={developed ? "" : undefined}
+>
+  {
+    spread.photos.map((photo, index) => (
+      <button
+        type="button"
+        class:list={[
+          "absolute inset-0 cursor-zoom-in overflow-hidden border-0 bg-transparent p-0 pointer-events-none in-data-developed:pointer-events-auto",
+          "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ink",
+          clips[index],
+        ]}
+        aria-label={`View ${photo.alt}`}
+        data-lightbox-src={photo.full}
+        data-lightbox-alt={photo.alt}
+      >
+        <img
+          class="absolute inset-0 size-full object-cover"
+          src={photo.src}
+          srcset={photo.srcset}
+          sizes={sizes}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          data-spread-photo
+          data-half={spread.layout === "diagonal" ? String(index) : undefined}
+        />
+      </button>
+    ))
+  }
+</figure>

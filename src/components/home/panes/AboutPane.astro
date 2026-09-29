@@ -1,9 +1,11 @@
 ---
 import Pane from "../Pane.astro";
-import Disclosure from "../Disclosure.astro";
+import IconTile from "../IconTile.astro";
+import SectionLabel from "../SectionLabel.astro";
 import Separator from "../Separator.astro";
-import TechChip from "../TechChip.astro";
-import { education, skills } from "../../../data/site";
+import Tag from "../Tag.astro";
+import TimelineItem from "../TimelineItem.astro";
+import { education, skills, story } from "../../../data/site";
 
 const capabilities = [
   { label: "Languages", items: skills.languages },
@@ -15,27 +17,38 @@ const capabilities = [
 ---
 
 <Pane id="about">
-  <section class="pane-block pane-intro">
+  <section class="max-w-[68ch]">
     <p>
       Computer Science student at
-      <a href="https://www.upm.es/" target="_blank" rel="noopener noreferrer">Universidad Politécnica de Madrid</a>,
-      focused on backend systems, infrastructure, and useful software.
+      <a class="pane-link" href="https://www.upm.es/" target="_blank" rel="noopener noreferrer"
+        >Universidad Politécnica de Madrid</a
+      >, focused on backend systems, infrastructure, and useful software.
+    </p>
+    <p class="mt-4">
+      Also, I love building products and care a lot about the aesthetics of  
+    </p>
+    <p class="mt-4">
+      <a class="pane-link" href={story.href}>{story.label}</a>
     </p>
   </section>
 
-  <section class="pane-block" aria-labelledby="about-stack">
-    <h2 class="pane-label" id="about-stack">Stack</h2>
-    <div class="pane-stack-list">
+  <section class="mt-12.5 max-w-[68ch]" aria-labelledby="about-stack">
+    <SectionLabel id="about-stack">Stack</SectionLabel>
+    <div
+      class="relative flex flex-col before:pointer-events-none before:absolute before:inset-y-0 before:left-[9.75rem] before:z-0 before:w-0 before:border-l before:border-dashed before:border-line"
+    >
       <Separator />
       {
         capabilities.map((capability) => (
           <>
-            <div class="pane-stack-row">
-              <h3 class="pane-stack-label">{capability.label}</h3>
-              <ul class="pane-stack-icons">
+            <div class="relative z-1 grid min-w-0 grid-cols-[9.75rem_minmax(0,1fr)] items-start gap-x-4 py-[0.95rem]">
+              <h3 class="pr-3 text-[0.75rem] leading-[1.4] font-medium tracking-[0.06em] text-muted uppercase">
+                {capability.label}
+              </h3>
+              <ul class="flex flex-wrap items-center gap-[0.4rem]">
                 {capability.items.map((name) => (
                   <li>
-                    <TechChip name={name} />
+                    <Tag name={name} />
                   </li>
                 ))}
               </ul>
@@ -47,87 +60,34 @@ const capabilities = [
     </div>
   </section>
 
-  <Separator />
+  <Separator variant="diagonal" class="mt-0 mb-7.5" />
 
-  <section class="pane-block pane-education" aria-labelledby="about-education">
-    <h2 class="pane-label" id="about-education">Education</h2>
+  <section class="max-w-[68ch]" aria-labelledby="about-education">
+    <SectionLabel id="about-education">Education</SectionLabel>
 
     {
       education.map((entry, index) => (
         <>
-          {index > 0 && <Separator />}
-          <article class="work-company education-entry" aria-labelledby={`education-institution-${index}`}>
-            <header class="work-company-header">
-              <div class="work-company-brand">
-                <div class="work-company-logo">
-                  <img src={entry.logo} alt="" loading="lazy" decoding="async" />
-                </div>
-                <div class="education-institution-line">
-                  <h3 class="work-company-name" id={`education-institution-${index}`}>
-                    {entry.institution}
-                  </h3>
-                  <span class="education-abbreviation">{entry.abbreviation}</span>
-                </div>
-              </div>
-              <p class="work-company-place">{entry.period}</p>
-            </header>
-
-            <ul class="work-roles">
-              <li class="work-role">
-                <div class="work-role-icon" aria-hidden="true">
-                  <svg viewBox="0 0 16 16" class="work-role-icon-svg">
-                    <path
-                      d="M1.5 6.5 8 3.5l6.5 3-6.5 3-6.5-3Z"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.3"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M4 8.2v2.4c0 .7 1.8 1.6 4 1.6s4-.9 4-1.6V8.2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M14.5 6.5v3.25"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.3"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </div>
-
-                <div class="work-role-body">
-                  <Disclosure class="work-role-disclosure">
-                    <span slot="summary" class="work-role-summary">
-                      <span class="work-role-title">{entry.studyName}</span>
-                      <span class="work-role-meta">
-                        <span>{entry.educationType}</span>
-                        <span class="work-role-meta-sep" aria-hidden="true">|</span>
-                        <span>{entry.period}</span>
-                      </span>
-                    </span>
-
-                    <ul class="work-role-bullets">
-                      {entry.bullets.map((bullet) => (
-                        <li>{bullet}</li>
-                      ))}
-                    </ul>
-                  </Disclosure>
-
-                  <ul class="education-tags" aria-label={`Topics studied at ${entry.institution}`}>
-                    {entry.tags.map((tag) => (
-                      <li>{tag}</li>
-                    ))}
-                  </ul>
-                </div>
-              </li>
-            </ul>
-          </article>
+          {index > 0 && <Separator class="my-6.25" />}
+          <TimelineItem
+            as="article"
+            class:list={{ "mt-[0.85rem]": index === 0 }}
+            aria-labelledby={`education-institution-${index}`}
+            tile="2.6rem"
+            gap="0.85rem"
+            align="center"
+            ownRail
+            title={`${entry.institution} - ${entry.abbreviation}`}
+            titleId={`education-institution-${index}`}
+            meta={[entry.educationType, entry.period]}
+            bullets={entry.bullets}
+            bulletClass="marker:text-[length:0.85em]"
+            tags={entry.tags}
+            tagVariant="muted"
+            tagsLabel={`Topics studied at ${entry.institution}`}
+          >
+            <IconTile slot="tile" src={entry.logo} class="size-(--tile)" imgClass="opacity-92" />
+          </TimelineItem>
         </>
       ))
     }
