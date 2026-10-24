@@ -1,218 +1,407 @@
-@import "tailwindcss";
+/*
+ * Closed stylesheet: style components with Tailwind utilities in their markup.
+ * Only edit this file when strictly necessary; see "Styling" in AGENTS.md.
+ */
+@import "tailwindcss" source(none);
+
+@source "../components/home";
+@source "../layouts";
+@source "../pages";
+@source "../components/icons/TechIcon.astro";
+
+/* Portrait or near-square desktop windows; keep in sync with `compactQuery` (layout-queries.ts). */
+@custom-variant compact (@media (min-width: 900px) and (max-aspect-ratio: 4/3));
 
 @theme {
-  --font-body: var(--font-manrope);
-  --font-heading: var(--font-libre-baskerville);
-  --color-bg: #ffffff;
-  --color-fg: #000000;
+  --spacing-unit: 20px;
+  --font-sans: var(--font-neue-montreal), sans-serif;
+  --font-heading: var(--font-space-grotesk);
+  --color-canvas: #070707;
+  --color-surface: #0b0b0b;
+  --color-ink: #ffffff;
+  --color-muted: #8b8b8b;
+  --color-link: #bdbdbd;
+  --color-chip: #2a2a2a;
+  --color-underline: #3a3a3a;
+  --color-scrollbar: #262626;
+  --color-line: color-mix(in srgb, #ffffff 9%, var(--color-surface));
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* Underlined link inside a pane; hover and focus light it up. */
+@utility pane-link {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline);
+  text-underline-offset: 3px;
+  transition:
+    color 0.3s linear,
+    text-decoration-color 0.3s linear;
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out both;
-  backface-visibility: hidden;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out both;
-}
-
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
-.delay-600 { animation-delay: 600ms; }
-
-/* Scroll-triggered reveal */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-[data-reveal].is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] {
-    opacity: 1;
-    transform: none;
-    transition: none;
+  &:hover,
+  &:focus-visible {
+    color: var(--color-ink);
+    text-decoration-color: currentColor;
   }
 }
 
-.nav-underline {
+/* Prose blocks that embed links from site data (not Astro markup). */
+@utility pane-prose {
+  & a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-decoration-color: var(--color-underline);
+    text-underline-offset: 3px;
+    transition:
+      color 0.3s linear,
+      text-decoration-color 0.3s linear;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-ink);
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+/* Vertical 1px timeline rail; place it with --rail-x (and --rail-top). */
+@utility rail-line {
   position: relative;
-  text-decoration: none;
-}
 
-.nav-underline::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background-color: currentColor;
-  transition: width 0.3s ease;
-}
-
-.nav-underline:hover::after {
-  width: 100%;
-}
-
-.invert {
-  filter: invert(1);
-}
-
-html {
-  scrollbar-width: none;
-}
-
-html::-webkit-scrollbar {
-  display: none;
+  &::before {
+    content: "";
+    position: absolute;
+    top: var(--rail-top, 0);
+    bottom: 0;
+    left: var(--rail-x);
+    z-index: 0;
+    width: 1px;
+    background: var(--color-line);
+    pointer-events: none;
+  }
 }
 
 @layer base {
-  a {
-    color: inherit;
-    text-decoration: none;
+  html {
+    height: 100%;
+    overflow: hidden;
+    background: var(--color-canvas);
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  body {
+    height: 100svh;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    text-rendering: geometricPrecision;
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  body > main {
+    min-height: 0;
+    overflow: hidden;
   }
 }
 
-.article-content h2 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
-}
+/*
+ * The shell's geometry lives here rather than in utilities: the reveal grid and the WebGPU
+ * field read --unit, and the mobile layout below rewrites these boxes as a whole.
+ */
+@layer components {
+  .shell {
+    --unit: var(--spacing-unit);
+    --rail: var(--spacing-unit);
+    --deck-w: round(nearest, calc((100% - var(--rail)) * 0.2), var(--unit));
+    --pane-w: round(nearest, calc((100% - var(--rail)) * 0.3), var(--unit));
+    --col2-left: calc(var(--rail) + var(--deck-w));
+    --pane-motion-duration: 220ms;
+    --pane-opacity-duration: 180ms;
+    --pane-motion-ease: cubic-bezier(0.23, 1, 0.32, 1);
 
-.article-content h3 {
-  font-family: var(--font-heading);
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin-top: 2rem;
-  margin-bottom: 0.5rem;
-}
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
 
-.article-content p {
-  font-family: var(--font-body);
-  font-size: 1.125rem;
-  line-height: 1.75;
-  margin-bottom: 1.25rem;
-}
+  .shell-surface {
+    position: absolute;
+    inset: var(--rail) 0 var(--rail) var(--rail);
+    z-index: 1;
+    background: var(--color-surface);
+  }
 
-.article-content a {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-thickness: 1px;
-}
+  /* Desktop: transparent wrapper so deck/pane stay absolutely positioned on .shell. */
+  .shell-stage {
+    display: contents;
+  }
 
-.article-content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: #f5f5f5;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  font-size: 0.875em;
-}
+  .shell-deck {
+    position: absolute;
+    top: var(--rail);
+    bottom: var(--rail);
+    left: var(--rail);
+    width: var(--deck-w);
+    z-index: 4;
+    overflow: hidden;
+    background: var(--color-surface);
+    box-shadow: inset -1px 0 0 var(--color-line);
+  }
 
-.article-content pre {
-  padding: 1.25rem;
-  border-radius: 0.25rem;
-  overflow-x: auto;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
+  .shell-pane {
+    position: absolute;
+    top: var(--rail);
+    bottom: var(--rail);
+    left: var(--col2-left);
+    width: var(--pane-w);
+    z-index: 3;
+    overflow: hidden;
+  }
 
-.article-content pre code {
-  background: none;
-  padding: 0;
-  border-radius: 0;
-  font-size: inherit;
-}
+  .shell-field {
+    position: absolute;
+    inset: var(--rail) 0 var(--rail) var(--col2-left);
+    z-index: 2;
+    pointer-events: none;
+  }
 
-.article-content blockquote {
-  border-left: 3px solid #000;
-  padding-left: 1.25rem;
-  margin-left: 0;
-  margin-bottom: 1.25rem;
-  font-style: italic;
-  opacity: 0.8;
-}
+  /* Ambient light runway after the pane column; only used on the mobile stage. */
+  .shell-runway {
+    display: none;
+  }
 
-.article-content img {
-  border-radius: 0.25rem;
-  max-width: 100%;
-  height: auto;
-  margin: 2rem auto;
-}
+  .shell-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
 
-.article-content hr {
-  border: none;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  margin: 2.5rem 0;
-}
+  .shell-canvas.is-live {
+    opacity: 1;
+  }
 
-.article-content ul,
-.article-content ol {
-  padding-left: 1.5rem;
-  margin-bottom: 1.25rem;
-}
+  .pane-layer {
+    position: absolute;
+    inset: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--color-surface);
+    box-shadow: inset -1px 0 0 var(--color-line);
+    scrollbar-width: none;
+  }
 
-.article-content li {
-  font-family: var(--font-body);
-  font-size: 1.125rem;
-  line-height: 1.75;
-  margin-bottom: 0.25rem;
-}
+  .pane-layer::-webkit-scrollbar {
+    display: none;
+  }
 
-.article-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1.5rem;
-}
+  .scroll-progress {
+    position: fixed;
+    top: 0;
+    inset-inline: 0;
+    z-index: 50;
+    height: 2px;
+    pointer-events: none;
+  }
 
-.article-content th,
-.article-content td {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-  font-size: 0.9375rem;
-}
+  .scroll-progress-fill {
+    height: 100%;
+    width: 100%;
+    background: #fff;
+    transform: scaleX(var(--scroll-progress, 0));
+    transform-origin: left center;
+  }
 
-.article-content th {
-  font-family: var(--font-heading);
-  font-weight: 500;
-  background: #fafafa;
-}
+  /* Tech SVGs ship their brand colors; tint every painted part with the icon's color. */
+  .tech-icon-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
 
-.article-content td {
-  font-family: var(--font-body);
+  .tech-icon-svg [fill]:not([fill="none"]) {
+    fill: currentColor !important;
+  }
+
+  .tech-icon-svg [stroke]:not([stroke="none"]) {
+    stroke: currentColor !important;
+  }
+
+  .tech-icon-svg [fill="none"] {
+    fill: none !important;
+  }
+
+  .tech-icon-svg [stroke="none"] {
+    stroke: none !important;
+  }
+
+  @supports selector(details::details-content) {
+    .disclosure::details-content {
+      opacity: 0;
+      transition:
+        opacity var(--pane-opacity-duration) var(--pane-motion-ease),
+        content-visibility var(--pane-motion-duration) allow-discrete;
+    }
+
+    .disclosure[open]::details-content {
+      opacity: 1;
+    }
+  }
+
+  @supports selector(details::details-content) and (interpolate-size: allow-keywords) {
+    .shell {
+      interpolate-size: allow-keywords;
+    }
+
+    .disclosure::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size var(--pane-motion-duration) var(--pane-motion-ease),
+        opacity var(--pane-opacity-duration) var(--pane-motion-ease),
+        content-visibility var(--pane-motion-duration) allow-discrete;
+    }
+
+    .disclosure[open]::details-content {
+      block-size: auto;
+    }
+  }
+
+  /* Compact window: the pane takes the room, the field stays as an ambient strip on the right. */
+  @media (min-width: 900px) and (max-aspect-ratio: 4/3) {
+    .shell {
+      --deck-w: round(nearest, calc((100% - var(--rail)) * 0.25), var(--unit));
+      --pane-w: round(nearest, calc((100% - var(--rail)) * 0.5), var(--unit));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shell {
+      --pane-motion-duration: 120ms;
+      --pane-opacity-duration: 120ms;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .shell {
+      --mobile-col-w: min(300px, round(down, calc(100vw - var(--rail-left) - max(var(--rail-right), var(--unit))), var(--unit)));
+      --mobile-runway-w: 80vw;
+      --rail-top: max(var(--rail), env(safe-area-inset-top, 0px));
+      --rail-right: max(0px, env(safe-area-inset-right, 0px));
+      --rail-bottom: max(var(--rail), env(safe-area-inset-bottom, 0px));
+      --rail-left: max(var(--rail), env(safe-area-inset-left, 0px));
+    }
+
+    .shell .shell-surface {
+      display: none;
+    }
+
+    /* Full-bleed mesh under the transparent stage; panes stay opaque on top. */
+    .shell .shell-field {
+      display: block;
+      inset: var(--rail-top) var(--rail-right) var(--rail-bottom) var(--rail-left);
+    }
+
+    .shell .shell-stage {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      position: absolute;
+      top: var(--rail-top);
+      right: var(--rail-right);
+      bottom: var(--rail-bottom);
+      left: var(--rail-left);
+      z-index: 4;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: none;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pinch-zoom;
+      background: transparent;
+    }
+
+    .shell .shell-stage::-webkit-scrollbar {
+      display: none;
+    }
+
+    .shell .shell-deck,
+    .shell .shell-pane {
+      position: relative;
+      inset: auto;
+      top: auto;
+      right: auto;
+      bottom: auto;
+      left: auto;
+      flex: 0 0 var(--mobile-col-w);
+      width: var(--mobile-col-w);
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y pinch-zoom;
+      background: var(--color-surface);
+      box-shadow: inset -1px 0 0 var(--color-line);
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-scrollbar) transparent;
+    }
+
+    .shell .shell-runway {
+      display: block;
+      flex: 0 0 var(--mobile-runway-w);
+      width: var(--mobile-runway-w);
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .shell .shell-deck::-webkit-scrollbar,
+    .shell .shell-pane::-webkit-scrollbar,
+    .shell .pane-layer::-webkit-scrollbar {
+      width: 3px;
+      display: block;
+    }
+
+    .shell .shell-deck::-webkit-scrollbar-thumb,
+    .shell .shell-pane::-webkit-scrollbar-thumb,
+    .shell .pane-layer::-webkit-scrollbar-thumb {
+      background: var(--color-scrollbar);
+      border-radius: 999px;
+    }
+
+    .shell .pane-layer {
+      position: absolute;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-scrollbar) transparent;
+      box-shadow: none;
+    }
+
+    .shell .shell-pane {
+      overflow: hidden;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .shell .shell-pane:not(:has([data-pane-layer])):not([data-camera-hold]) {
+      display: none;
+    }
+  }
 }

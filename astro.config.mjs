@@ -1,28 +1,56 @@
 // @ts-check
 import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
+import { wgslVitePlugin } from "@vgpu/wgsl/loader-vite";
 
 export default defineConfig({
+  site: "https://sflores.one",
+  prefetch: {
+    defaultStrategy: "hover",
+  },
+
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), wgslVitePlugin({ minify: true })],
   },
-  markdown: {
-    shikiConfig: {
-      theme: "css-variables",
-    },
-  },
+
   fonts: [
     {
-      name: "Libre Baskerville",
-      cssVariable: "--font-libre-baskerville",
-      provider: fontProviders.fontsource(),
-      weights: [400, 700],
-      styles: ["normal", "italic"],
-      subsets: ["latin"],
+      name: "Neue Montreal",
+      cssVariable: "--font-neue-montreal",
+      provider: fontProviders.local(),
+      options: {
+        variants: [
+          {
+            weight: 300,
+            style: "normal",
+            src: ["./src/assets/fonts/neue-montreal/neuemontreal-light.otf"],
+          },
+          {
+            weight: 400,
+            style: "normal",
+            src: ["./src/assets/fonts/neue-montreal/neuemontreal-regular.otf"],
+          },
+          {
+            weight: 400,
+            style: "italic",
+            src: ["./src/assets/fonts/neue-montreal/neuemontreal-italic.otf"],
+          },
+          {
+            weight: 500,
+            style: "normal",
+            src: ["./src/assets/fonts/neue-montreal/neuemontreal-medium.otf"],
+          },
+          {
+            weight: 700,
+            style: "normal",
+            src: ["./src/assets/fonts/neue-montreal/neuemontreal-bold.otf"],
+          },
+        ],
+      },
     },
     {
-      name: "Manrope",
-      cssVariable: "--font-manrope",
+      name: "Space Grotesk",
+      cssVariable: "--font-space-grotesk",
       provider: fontProviders.fontsource(),
       weights: [400, 500, 600, 700],
       styles: ["normal"],

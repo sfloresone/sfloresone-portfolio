@@ -1,0 +1,11 @@
+---
+import HomeShell from "../components/home/HomeShell.astro";
+import WorkPane from "../components/home/panes/WorkPane.astro";
+import { sectionById } from "../data/site";
+
+const section = sectionById("work");
+---
+
+<HomeShell title={section.title} description={section.description} active="work">
+  <WorkPane />
+</HomeShell>

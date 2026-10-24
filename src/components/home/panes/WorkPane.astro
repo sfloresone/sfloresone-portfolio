@@ -1,0 +1,33 @@
+---
+import Pane from "../Pane.astro";
+import SectionLabel from "../SectionLabel.astro";
+import Separator from "../Separator.astro";
+import ExperienceItem from "../work/ExperienceItem.astro";
+import ProjectItem from "../work/ProjectItem.astro";
+import { featuredProjects, workExperiences } from "../../../data/site";
+---
+
+<Pane id="work">
+  {
+    workExperiences.map((work, index) => (
+      <>
+        {index > 0 && <Separator class="my-6.25" />}
+        <ExperienceItem work={work} index={index} />
+      </>
+    ))
+  }
+
+  <Separator class="mt-7.5" />
+  <Separator variant="diagonal" class="mb-7.5" />
+
+  <section aria-labelledby="work-projects">
+    <SectionLabel id="work-projects">Projects</SectionLabel>
+    <ul class="-mx-unit flex w-[calc(100%+2*var(--spacing-unit))] flex-col border border-line">
+      {
+        featuredProjects.map((project, index) => (
+          <ProjectItem project={project} index={index} />
+        ))
+      }
+    </ul>
+  </section>
+</Pane>

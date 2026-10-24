@@ -1,0 +1,47 @@
+---
+interface Props {
+  /** How the chevron lines up with a multi-line summary. */
+  align?: "start" | "center";
+  contentClass?: string;
+  variant?: "default" | "card";
+}
+
+const { align = "start", contentClass, variant = "default" } = Astro.props;
+---
+
+<details class="disclosure group/disclosure">
+  <summary
+    class:list={[
+      "relative z-1 cursor-pointer list-none marker:content-[''] focus-visible:outline-2 focus-visible:outline-link [&::-webkit-details-marker]:hidden",
+      variant === "card"
+        ? "block focus-visible:outline-offset-[-4px]"
+        : "flex justify-between gap-3 focus-visible:rounded-[2px] focus-visible:outline-offset-4",
+      variant === "default" && (align === "center" ? "items-center" : "items-start"),
+    ]}
+  >
+    {variant === "card" && <slot name="media" />}
+    <span class:list={[variant === "card" ? "relative block" : "contents"]}>
+      <span class:list={["min-w-0", variant === "card" ? "block w-full" : "flex-1"]}><slot name="summary" /></span>
+      <svg
+        class:list={[
+          "size-[0.85rem] flex-none transition-transform duration-(--pane-motion-duration) ease-(--pane-motion-ease) group-open/disclosure:rotate-180 motion-reduce:transition-none",
+          variant === "card"
+            ? "absolute top-[calc(var(--unit)+0.3rem)] right-unit"
+            : { "mt-[0.35rem]": align === "start" },
+        ]}
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.2"
+        aria-hidden="true"
+      >
+        <path d="m2.5 4 3.5 3.5L9.5 4"></path>
+      </svg>
+    </span>
+  </summary>
+  <div class:list={[{ "pt-[0.55rem]": variant === "default" }, contentClass]}>
+    <slot />
+  </div>
+</details>

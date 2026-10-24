@@ -2,7 +2,6 @@
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
-import Header from "../components/Header.astro";
 
 interface Props {
   title: string;
@@ -10,44 +9,29 @@ interface Props {
 }
 
 const { title, description = "Personal portfolio" } = Astro.props;
+
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 ---
 
-<html lang="es" class="scroll-smooth">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <meta name="theme-color" content="#ffffff" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#070707" />
     <ClientRouter />
-    <Font cssVariable="--font-libre-baskerville" preload={[{ weight: 400 }]} />
-    <Font cssVariable="--font-manrope" preload={[{ weight: 500 }]} />
+    <Font cssVariable="--font-neue-montreal" preload={[{ weight: 400 }]} />
+    <Font cssVariable="--font-space-grotesk" preload={[{ weight: 500 }, { weight: 600 }]} />
   </head>
-  <body>
-    <Header />
-    <main>
+  <body class="flex flex-col antialiased">
+    <main class="flex flex-1 flex-col">
       <slot />
     </main>
   </body>
 </html>
-
-<script>
-  function initReveal() {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
-    );
-    document.querySelectorAll("[data-reveal]").forEach((el) => observer.observe(el));
-  }
-
-  initReveal();
-  document.addEventListener("astro:page-load", initReveal);
-</script>

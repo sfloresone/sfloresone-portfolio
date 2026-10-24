@@ -1,0 +1,24 @@
+---
+import TechIcon from "../icons/TechIcon.astro";
+
+interface Props {
+  name: string;
+  /** `chip` pairs the name with its tech icon; `muted` is a plain topic label. */
+  variant?: "chip" | "muted";
+}
+
+const { name, variant = "chip" } = Astro.props;
+---
+
+{
+  variant === "chip" ? (
+    <span class="inline-flex items-center gap-[0.35rem] rounded-full border border-line bg-[color-mix(in_srgb,#ffffff_4%,var(--color-surface))] py-[0.28rem] pr-[0.55rem] pl-[0.4rem] text-[0.75rem] leading-[1.2] font-medium whitespace-nowrap text-ink">
+      <TechIcon name={name} />
+      <span class="text-link">{name}</span>
+    </span>
+  ) : (
+    <span class="inline-flex items-center rounded-full border border-line bg-[color-mix(in_srgb,#ffffff_3%,var(--color-surface))] px-2 py-1 text-[0.7rem] leading-[1.2] text-muted">
+      {name}
+    </span>
+  )
+}
