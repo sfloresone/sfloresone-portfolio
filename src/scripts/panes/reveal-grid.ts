@@ -1,5 +1,6 @@
-import { sections, type SectionId } from "../../data/site";
-import { isSectionId, maxRevealRows, paneState, revealTuning, routeKey } from "./state";
+import { sections, type SectionId } from "../../data/routes";
+import { mobileQuery } from "./layout-queries";
+import { initialRevealRows, isSectionId, mobileRevealTuning, paneState, revealTuning, routeKey } from "./state";
 
 /** A horizontal front across the pane column, or a vertical band over it. */
 interface Front {
@@ -81,9 +82,10 @@ function directionOf(from: Layer, section: SectionId, route: string): 1 | -1 {
 export class RevealGrid {
   readonly slot: HTMLElement;
   readonly #reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  readonly #mobileLayout = window.matchMedia(mobileQuery);
   readonly #layers: Layer[] = [];
-  readonly #open = new Float32Array(maxRevealRows);
-  readonly #owners = new Int8Array(maxRevealRows);
+  #open = new Float32Array(initialRevealRows);
+  #owners = new Int8Array(initialRevealRows);
   readonly #resize: ResizeObserver;
 
   #veil: Front = freshFront(-lead);
@@ -140,6 +142,8 @@ export class RevealGrid {
 
     this.#opening = false;
 
+    if (this.#mobileLayout.matches && this.#layers.length) this.slot.setAttribute("data-camera-hold", "");
+
     if (this.#reducedMotion.matches) {
       this.#finishNow();
       this.#write();
@@ -186,6 +190,8 @@ export class RevealGrid {
    * `incoming` is its freshly adopted layer.
    */
   show(section: SectionId | null, route: string, incoming: HTMLElement | null): void {
+    if (this.#mobileLayout.matches && (this.#layers.length || incoming)) this.slot.setAttribute("data-camera-hold", "");
+
     const top = this.#layers.at(-1);
 
     if (!section || !incoming) {
@@ -255,14 +261,53 @@ export class RevealGrid {
     this.#height = this.slot.clientHeight;
 
     const cols = Math.round(this.#width / this.#unit);
+    const rows = Math.ceil(this.#height / this.#unit);
+    const oldCols = this.#cols;
+    const oldRows = this.#rows;
+    const uncovered = this.#opening && this.#veil.position >= oldCols + lead;
 
-    if (this.#opening && this.#veil.position >= this.#cols + lead) {
+    if (rows !== oldRows || cols !== oldCols) {
+      const previous = this.#open.slice(0, oldRows);
+      const capacity = 2 ** Math.ceil(Math.log2(Math.max(initialRevealRows, rows)));
+
+      if (capacity > this.#open.length) {
+        this.#open = new Float32Array(capacity);
+        this.#owners = new Int8Array(capacity);
+      }
+
+      if (capacity * 4 > paneState.rows.length) paneState.rows = new Float32Array(capacity * 4);
+
+      this.#open.fill(0);
+
+      for (let r = 0; r < rows; r++) {
+        const source = Math.min(oldRows - 1, Math.floor((r + 0.5) * oldRows / rows));
+
+        this.#open[r] = oldCols > 0 && source >= 0 ? Math.min(cols, Math.floor(previous[source] * cols / oldCols)) : 0;
+      }
+
+      if (oldCols > 0) {
+        const progress = (this.#veil.position + lead) / (oldCols + lead * 2);
+
+        this.#veil.position = progress * (cols + lead * 2) - lead;
+      }
+
+      for (const layer of this.#layers) {
+        if (!layer.band || oldRows <= 0) continue;
+
+        const padding = revealTuning.bandRows + 1;
+        const progress = (layer.band.position + padding) / (oldRows + revealTuning.bandRows + 2);
+
+        layer.band.position = progress * (rows + revealTuning.bandRows + 2) - padding;
+      }
+    }
+
+    if (uncovered) {
       this.#veil.position = cols + lead;
       this.#open.fill(cols);
     }
 
     this.#cols = cols;
-    this.#rows = Math.min(maxRevealRows, Math.ceil(this.#height / this.#unit));
+    this.#rows = rows;
   }
 
   #run(): void {
@@ -308,10 +353,17 @@ export class RevealGrid {
   }
 
   #advance(dt: number): void {
+    if (this.#reducedMotion.matches) {
+      this.#finishNow();
+
+      return;
+    }
+
     const veil = this.#veil;
     const span = this.#cols + lead * 2;
     const target = this.#opening ? this.#cols + lead : -lead;
-    const speed = span / (this.#opening ? revealTuning.openSeconds : revealTuning.closeSeconds);
+    const tuning = this.#mobileLayout.matches ? mobileRevealTuning : revealTuning;
+    const speed = span / (this.#opening ? tuning.openSeconds : tuning.closeSeconds);
     const moving = veil.position !== target;
 
     veil.age += dt;
@@ -336,7 +388,7 @@ export class RevealGrid {
       for (const layer of this.#layers.splice(0)) layer.element.remove();
     }
 
-    const bandSpeed = (this.#rows + revealTuning.bandRows + 2) / revealTuning.switchSeconds;
+    const bandSpeed = (this.#rows + revealTuning.bandRows + 2) / tuning.switchSeconds;
 
     for (let i = this.#layers.length - 1; i >= 0; i--) {
       const band = this.#layers[i].band;
@@ -422,10 +474,17 @@ export class RevealGrid {
       this.#opening && newest !== undefined && !newest.band && this.#veil.position >= this.#cols + lead;
 
     paneState.hasLayers = this.#layers.length > 0;
+    paneState.revealReady = uncovered;
+
+    for (const layer of this.#layers) layer.element.inert = !this.#opening || layer !== newest;
 
     if (uncovered && newest && !newest.focused) {
       newest.focused = true;
-      newest.element.querySelector<HTMLElement>("[data-pane-title]")?.focus({ preventScroll: true });
+
+      // Mobile camera focuses the title after the horizontal pan settles.
+      if (!this.#mobileLayout.matches) {
+        newest.element.querySelector<HTMLElement>("[data-pane-title]")?.focus({ preventScroll: true });
+      }
     }
   }
 

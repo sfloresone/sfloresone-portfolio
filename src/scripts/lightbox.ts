@@ -5,7 +5,7 @@ const cfg = {
   slop: 8,
   nearHome: 1.02,
   snapHome: 1.05,
-  exitMs: 400,
+  exitMs: 550,
 } as const;
 
 type Drag = {

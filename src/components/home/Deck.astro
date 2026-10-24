@@ -1,5 +1,8 @@
 ---
 import { intro, sections, site, socials, type SectionId } from "../../data/site";
+import AmbientMusic from "./AmbientMusic.astro";
+import { Image } from "astro:assets";
+import avatar from "../../assets/logos/black-personal-logo-3D.png";
 
 interface Props {
   active?: SectionId;
@@ -15,7 +18,7 @@ const linkClass =
   "inline-flex min-h-[1.85em] items-center gap-[0.4em] text-muted transition-[color] duration-300 ease-linear hover:text-ink focus-visible:text-ink";
 ---
 
-<div class="relative flex h-full flex-col gap-7.5 p-unit leading-normal max-[900px]:h-auto">
+<div class="relative flex h-full flex-col gap-7.5 p-unit leading-normal">
   <header class="relative pr-8">
     <div>
       <a
@@ -25,14 +28,7 @@ const linkClass =
       >
         {site.name}
       </a>
-      <img
-        class="absolute top-0 right-0 size-8 object-contain opacity-85"
-        src="/black-personal-logo-3D.png"
-        alt=""
-        width="72"
-        height="72"
-        decoding="async"
-      />
+      <Image class="absolute top-0 right-0 size-8 object-contain opacity-85" src={avatar} alt="" width={96} format="webp" />
     </div>
     <p class="mt-[0.85rem] max-w-[28ch] text-muted">{intro}</p>
   </header>
@@ -83,17 +79,21 @@ const linkClass =
       })
     }
   </ul>
+
+  <AmbientMusic />
 </div>
 
 <script>
   document.querySelectorAll("[data-copy-email]").forEach((node) => {
     const el = node instanceof HTMLAnchorElement ? node : null;
+
     if (!el) return;
 
     el.addEventListener("click", async (event) => {
       event.preventDefault();
       const email = el.getAttribute("data-copy-email");
       const label = el.getAttribute("data-copy-label") ?? "Email";
+
       if (!email || el.dataset.copying === "1") return;
 
       try {

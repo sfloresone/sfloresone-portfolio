@@ -1,24 +1,37 @@
-// Shared by every field pipeline. Everything lives in canvas CSS pixels on the page's grid:
-// cell (i, j) spans [i, i + 1) x [j, j + 1) units, so its center sits on the frame's dots.
+// The fixed drawing grid and the CSS layout grid have independent coordinates.
 
 export struct FieldUniforms {
   // cssWidth, cssHeight, dpr, time
   canvas: vec4f,
-  // cols, rows, unit px, pane cols
+  // drawing cols, drawing rows, interaction scale, drawing pane cols
   grid: vec4f,
+  // layout unit px, pane width px, pane drawing step px, free drawing step px
+  pane: vec4f,
   // x, y (css px), strength, radius
   pointer: vec4f,
   base: vec4f,
   crest: vec4f,
+  // crest color of a drawing's accent mask (scene.r)
+  accent: vec4f,
   // x, y (css px), age seconds, strength
   ripple0: vec4f,
   ripple1: vec4f,
   ripple2: vec4f,
   ripple3: vec4f,
-  // eased scene progress, front width in cells, fromCol (>=0 = close R→L), seed
+  // eased scene progress, front width in drawing cells, pane fraction (>=0 = close R→L), seed
   scene: vec4f,
   // swell amplitude, unused, unused, unused
   breath: vec4f,
+  // viewport offset (-1 on desktop), virtual world width, pane left, pane width
+  camera: vec4f,
+}
+
+export fn sceneSize(u: FieldUniforms) -> vec2f {
+  return vec2f(select(u.canvas.x, u.camera.y, u.camera.x >= 0.0), u.canvas.y);
+}
+
+export fn worldOfPx(u: FieldUniforms, px: vec2f) -> vec2f {
+  return px + vec2f(max(u.camera.x, 0.0), 0.0);
 }
 
 fn hash21(p: vec2f) -> f32 {
@@ -52,18 +65,19 @@ export fn swellAt(uv: vec2f, aspect: f32, time: f32) -> f32 {
 }
 
 // Ring left by a click, as extra dot size.
-export fn rippleAt(r: vec4f, px: vec2f) -> f32 {
+export fn rippleAt(r: vec4f, px: vec2f, scale: f32) -> f32 {
   if (r.w <= 0.0) {
     return 0.0;
   }
 
-  let e = distance(px, r.xy) - r.z * 420.0;
-  return exp(-(e * e) / (2.0 * 26.0 * 26.0)) * r.w;
+  let e = distance(px, r.xy) - r.z * 420.0 * scale;
+  let width = max(26.0 * scale, 0.001);
+  return exp(-(e * e) / (2.0 * width * width)) * r.w;
 }
 
 // Column where the scene front stands on `row`.
 // Open morph: left → right across the pane then the field.
-// Close-from (`scene.z >= 0`): starts at `fromCol` and runs right → left to empty.
+// Close-from (`scene.z >= 0`): starts at that fraction of the pane and runs right → left.
 fn sceneFront(u: FieldUniforms, row: f32) -> f32 {
   let seed = u.scene.w;
   let time = u.canvas.w;
@@ -73,7 +87,7 @@ fn sceneFront(u: FieldUniforms, row: f32) -> f32 {
   if (u.scene.z >= 0.0) {
     let width = max(u.scene.y, 1.0);
 
-    return mix(u.scene.z, -4.0, u.scene.x) + jag * width;
+    return mix(u.scene.z * u.grid.w, -4.0, u.scene.x) + jag * width;
   }
 
   let width = max(u.scene.y, 1.0);
@@ -112,5 +126,25 @@ export fn sceneAt(a: texture_2d<f32>, b: texture_2d<f32>, linear: sampler, uv: v
 }
 
 export fn cellOfPx(u: FieldUniforms, px: vec2f) -> vec2f {
-  return floor(px / u.grid.z);
+  if (u.camera.x >= 0.0) {
+    return floor(px / sceneSize(u) * u.grid.xy);
+  }
+  var col = u.grid.w + (px.x - u.pane.y) / max(u.pane.w, 0.001);
+  if (px.x < u.pane.y && u.grid.w > 0.0) {
+    col = px.x / max(u.pane.z, 0.001);
+  }
+  return floor(vec2f(col, px.y * u.grid.y / max(u.canvas.y, 0.001)));
+}
+
+export fn centerOfCell(u: FieldUniforms, cell: vec2f) -> vec2f {
+  if (u.camera.x >= 0.0) {
+    let step = u.canvas.x / u.grid.x;
+    let x = (cell.x + 0.5) * step - (u.camera.x % step);
+    return vec2f(select(x, x + u.canvas.x, x < 0.0), (cell.y + 0.5) * u.canvas.y / u.grid.y);
+  }
+  var x = u.pane.y + (cell.x - u.grid.w + 0.5) * u.pane.w;
+  if (cell.x < u.grid.w) {
+    x = (cell.x + 0.5) * u.pane.z;
+  }
+  return vec2f(x, (cell.y + 0.5) * u.canvas.y / u.grid.y);
 }

@@ -4,6 +4,7 @@ import IconTile from "../IconTile.astro";
 import SectionLabel from "../SectionLabel.astro";
 import Separator from "../Separator.astro";
 import Tag from "../Tag.astro";
+import TextSpectrumLink from "../TextSpectrumLink.astro";
 import TimelineItem from "../TimelineItem.astro";
 import { education, skills, story } from "../../../data/site";
 
@@ -19,29 +20,29 @@ const capabilities = [
 <Pane id="about">
   <section class="max-w-[68ch]">
     <p>
-      Computer Science student at
+      Software Engineering student at
       <a class="pane-link" href="https://www.upm.es/" target="_blank" rel="noopener noreferrer"
         >Universidad Politécnica de Madrid</a
-      >, focused on backend systems, infrastructure, and useful software.
+      >, focused on backend systems, infrastructure, product and useful software.
     </p>
     <p class="mt-4">
-      Also, I love building products and care a lot about the aesthetics of  
+      I've always been restless and a bit too curious... that's usually what pushes me to build.
     </p>
     <p class="mt-4">
-      <a class="pane-link" href={story.href}>{story.label}</a>
+      <TextSpectrumLink href={story.href} label={story.label} />
     </p>
   </section>
 
   <section class="mt-12.5 max-w-[68ch]" aria-labelledby="about-stack">
     <SectionLabel id="about-stack">Stack</SectionLabel>
     <div
-      class="relative flex flex-col before:pointer-events-none before:absolute before:inset-y-0 before:left-[9.75rem] before:z-0 before:w-0 before:border-l before:border-dashed before:border-line"
+      class="relative flex flex-col before:pointer-events-none before:absolute before:inset-y-0 before:left-[9.75rem] before:z-0 before:w-0 before:border-l before:border-dashed before:border-line [@media(max-width:899px)]:before:hidden"
     >
       <Separator />
       {
         capabilities.map((capability) => (
           <>
-            <div class="relative z-1 grid min-w-0 grid-cols-[9.75rem_minmax(0,1fr)] items-start gap-x-4 py-[0.95rem]">
+            <div class="relative z-1 grid min-w-0 grid-cols-[9.75rem_minmax(0,1fr)] items-start gap-x-4 py-[0.95rem] [@media(max-width:899px)]:grid-cols-1 [@media(max-width:899px)]:gap-y-2">
               <h3 class="pr-3 text-[0.75rem] leading-[1.4] font-medium tracking-[0.06em] text-muted uppercase">
                 {capability.label}
               </h3>

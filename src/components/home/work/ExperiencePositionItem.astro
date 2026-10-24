@@ -17,8 +17,8 @@ const { role } = Astro.props;
   gap="0.75rem"
   railEnd="last"
   title={role.title}
-  meta={[role.type, formatRoleRange(role.start, role.end), formatTenure(role.start, role.end)]}
-  bullets={role.bullets}
+  meta={[role.type, `${formatRoleRange(role.start, role.end)} | ${formatTenure(role.start, role.end)}`]}
+  paragraphs={role.description}
   tags={role.tags}
   tagsLabel={`Stack for ${role.title}`}
 >

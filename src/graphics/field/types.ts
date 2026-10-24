@@ -5,7 +5,8 @@ export const sceneTexels = 256;
 
 /**
  * A scene the halftone can take the shape of, stretched over the whole canvas.
- * Channels: relief (blurred shape), ink (sharp shape), luminance, coverage.
+ * Channels: accent mask (dark parts of a drawing), sharp photo mask (zero for other drawings), premultiplied luminance, coverage.
+ * Photos use sharp coverage and unblurred relief; other drawings retain their soft coverage.
  */
 export interface SceneField {
   /** `sceneTexels * sceneTexels * 4` bytes, row-major, top row first. */
@@ -33,21 +34,29 @@ export interface Field {
   setSection(id: SectionId | null): void;
   /**
    * Blends the halftone toward `scene`; `null` returns to the open swell.
-   * With `fromCol`, the front starts at that column and runs right to left.
+   * With `fromCol` (in layout grid cells), the front starts there and runs right to left.
    */
   setScene(scene: SceneField | null, fromCol?: number): void;
   /** Keeps `scene` on the field over any section scene; `null` hands it back to the section. */
   setOverride(scene: SceneField | null): void;
+  /** Draws the image at `src` in place of the section's scene; `null` hands it back. */
+  setDrawing(src: string | null): void;
   /** Resolves once any in-flight scene morph has settled. */
   whenSceneIdle(): Promise<void>;
   prewarm(id: SectionId): void;
+  /** Geometry scenes are painted for: the canvas on desktop, the camera's world on mobile. */
+  sceneLayout(): SceneLayout;
   upgrade(module: SceneModule): void;
   dispose(): void;
 }
 
 /** Lazily loaded builders that turn a section into a scene field. */
 export interface SceneModule {
-  build(id: SectionId, layout: SceneLayout): Promise<SceneField>;
+  /**
+   * With `drawing`, the image at that URL replaces the section's own scene. Without one,
+   * `opening` lets a section open on its first drawing instead.
+   */
+  build(id: SectionId, layout: SceneLayout, drawing: string | null, opening: boolean): Promise<SceneField>;
   /** Builds ahead of time so activating the section does no heavy work. */
   prewarm(id: SectionId, layout: SceneLayout): void;
 }
@@ -57,13 +66,17 @@ export type Vec4 = [number, number, number, number];
 export interface FieldUniformValues {
   canvas: Vec4;
   grid: Vec4;
+  pane: Vec4;
   pointer: Vec4;
   base: Vec4;
   crest: Vec4;
+  accent: Vec4;
   ripple0: Vec4;
   ripple1: Vec4;
   ripple2: Vec4;
   ripple3: Vec4;
   scene: Vec4;
   breath: Vec4;
+  /** Mobile world: viewport offset (-1 on desktop), world width, pane left, pane width. */
+  camera: Vec4;
 }

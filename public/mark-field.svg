@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Field drawing of mark-flat.svg: white is the amber drop, black is the leaf (the theme's accent). -->
+  <path d="M100 18c28 4 58 28 66 62 8 36-8 78-40 92-34 14-78-2-90-36C22 96 40 28 100 18z" fill="#fff"/>
+  <path transform="translate(100 108) rotate(14) scale(1.2) translate(-28 -48)" d="M28 2C48 18 54 52 28 94C2 52 8 18 28 2Z" fill="#000"/>
+</svg>

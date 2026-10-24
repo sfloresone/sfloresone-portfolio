@@ -1,4 +1,4 @@
-import { FieldUniforms, cellOfPx, sceneBlend } from "./field.wgsl";
+import { FieldUniforms, cellOfPx, sceneBlend, sceneSize } from "./field.wgsl";
 
 @group(0) @binding(0) var<uniform> u: FieldUniforms;
 @group(0) @binding(1) var sceneA: texture_2d<f32>;
@@ -16,7 +16,7 @@ fn bake(@builtin(global_invocation_id) id: vec3u) {
   }
 
   let uv = (vec2f(id.xy) + 0.5) / vec2f(texels);
-  let weight = sceneBlend(u, cellOfPx(u, uv * u.canvas.xy)).x;
+  let weight = sceneBlend(u, cellOfPx(u, uv * sceneSize(u))).x;
   let outgoing = textureLoad(sceneA, id.xy, 0);
   let incoming = textureLoad(sceneB, id.xy, 0);
   textureStore(baked, id.xy, mix(outgoing, incoming, weight));

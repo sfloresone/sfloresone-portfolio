@@ -48,6 +48,8 @@ const clips =
           decoding="async"
           data-spread-photo
           data-half={spread.layout === "diagonal" ? String(index) : undefined}
+          data-focus-x={photo.focus.x}
+          data-focus-y={photo.focus.y}
         />
       </button>
     ))

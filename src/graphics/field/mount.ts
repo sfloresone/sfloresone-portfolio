@@ -4,7 +4,7 @@ import {
   isRevealOpen,
   revealFrontCol,
 } from "../../scripts/panes/controller";
-import { onLostChange, onSpreadChange, onSectionChange, onSectionIntent, paneState } from "../../scripts/panes/state";
+import { mobileCamera, onLostChange, onSpreadChange, onSectionChange, onSectionIntent, paneState } from "../../scripts/panes/state";
 import type { Field, Placement, SceneLayout, SceneModule } from "./types";
 
 interface NetworkHints {
@@ -29,25 +29,24 @@ const readyWaiters: Array<(current: Field) => void> = [];
 
 let spreadFrames: ResizeObserver | null = null;
 
+let spreadLayoutKey: string | null = null;
+
+let spreadRelayout: ReturnType<typeof setTimeout> | null = null;
+
+const spreadRelayoutMs = 150;
+
 function fieldCanvas(): HTMLCanvasElement | null {
   return document.querySelector<HTMLCanvasElement>("[data-field-canvas]");
 }
 
-function shellRoot(): HTMLElement | null {
-  return document.querySelector<HTMLElement>("[data-shell]");
-}
-
-function setLostReady(ready: boolean): void {
-  shellRoot()?.classList.toggle("is-lost-ready", ready);
-}
-
 function layoutOf(canvas: HTMLCanvasElement): SceneLayout {
+  const box = canvas.getBoundingClientRect();
   const pane = document.querySelector<HTMLElement>("[data-pane-slot]")?.getBoundingClientRect().right ?? 0;
 
   return {
-    width: Math.max(1, canvas.clientWidth),
-    height: Math.max(1, canvas.clientHeight),
-    band: Math.max(0, pane - canvas.getBoundingClientRect().left),
+    width: Math.max(1, box.width),
+    height: Math.max(1, box.height),
+    band: Math.max(0, pane - box.left),
   };
 }
 
@@ -95,16 +94,34 @@ function notifyReady(current: Field): void {
 }
 
 function teardown(): void {
+  spreadRequest += 1;
+
+  if (spreadRelayout) clearTimeout(spreadRelayout);
+
+  spreadRelayout = null;
+  spreadLayoutKey = null;
   field?.dispose();
   field = null;
   boundCanvas = null;
 }
 
+/**
+ * On mobile the world counts a pane column even when none is open, so "404" is placed
+ * on the runway right after the deck, where swiping reveals it. Desktop keeps the default.
+ */
+function lostPlacement(height: number): Placement | undefined {
+  if (!mobileCamera.enabled) return undefined;
+
+  const runway = Math.max(1, mobileCamera.worldWidth - mobileCamera.paneLeft * 2);
+  const padX = runway * 0.04;
+  const padY = height * 0.3;
+
+  return { x: mobileCamera.paneLeft + padX, y: padY, width: runway - padX * 2, height: height - padY * 2 };
+}
+
 async function paintLost(current: Field): Promise<void> {
   const canvas = fieldCanvas();
   const request = ++lostRequest;
-
-  setLostReady(false);
 
   if (!canvas || !paneState.lost) return;
 
@@ -114,7 +131,9 @@ async function paintLost(current: Field): Promise<void> {
 
   const { textScene } = await import("./scenes/drawings");
 
-  const scene = await textScene("404", layoutOf(canvas), { weight: 600 });
+  // The field's own layout: on mobile it draws in the camera's world.
+  const layout = current.sceneLayout();
+  const scene = await textScene("404", layout, { weight: mobileCamera.enabled ? 700 : 600, placement: lostPlacement(layout.height) });
 
   if (request !== lostRequest || field !== current || !paneState.lost) return;
 
@@ -128,15 +147,10 @@ async function paintLost(current: Field): Promise<void> {
     current.setScene(scene);
     await current.whenSceneIdle();
   }
-
-  if (request !== lostRequest || field !== current || !paneState.lost) return;
-
-  setLostReady(true);
 }
 
 function clearLost(current: Field): void {
   lostRequest += 1;
-  setLostReady(false);
   current.setScene(null);
 }
 
@@ -152,34 +166,81 @@ async function frameSpreadElement(spread: HTMLElement): Promise<void> {
   const { frameSpread } = await import("./scenes/cover");
   const photos = [...spread.querySelectorAll<HTMLImageElement>("[data-spread-photo]")];
 
-  await Promise.all(
-    photos.map((photo) => {
-      if (photo.complete && photo.naturalWidth > 0) return Promise.resolve();
-
-      return photo.decode().catch(
-        () =>
-          new Promise<void>((resolve) => {
-            photo.addEventListener("load", () => resolve(), { once: true });
-            photo.addEventListener("error", () => resolve(), { once: true });
-          }),
-      );
-    }),
-  );
+  // A failed decode is already settled; waiting for a later load/error event can hang forever.
+  await Promise.all(photos.map((photo) => photo.decode().catch(() => {})));
   frameSpread(spread);
+}
+
+function spreadGeometry(canvas: HTMLCanvasElement, spread: HTMLElement) {
+  const layout = layoutOf(canvas);
+  const box = spread.getBoundingClientRect();
+  const origin = canvas.getBoundingClientRect();
+  const placement: Placement = { x: box.left - origin.left, y: box.top - origin.top, width: box.width, height: box.height };
+  const seam = Number.parseFloat(getComputedStyle(spread).getPropertyValue("--seam")) || 0;
+
+  const sources = [...spread.querySelectorAll<HTMLImageElement>("[data-spread-photo]")]
+    .map((photo) => photo.currentSrc || photo.src).join("\n");
+
+  const key = [layout.width, layout.height, layout.band, placement.x, placement.y, placement.width, placement.height, seam, sources].join(":");
+
+  return { layout, placement, seam, key };
+}
+
+/** Invalidates a pending reveal immediately; coalesces resize and srcset changes before rebuilding. */
+function refreshSpread(): void {
+  const id = paneState.spread;
+  const canvas = fieldCanvas();
+  const spread = gallerySpreads().find((candidate) => candidate.dataset.gallerySpread === id);
+
+  if (!id || !canvas || !spread) return;
+
+  const { key } = spreadGeometry(canvas, spread);
+
+  if (key === spreadLayoutKey) return;
+
+  spreadLayoutKey = key;
+
+  const request = ++spreadRequest;
+
+  if (spreadRelayout) clearTimeout(spreadRelayout);
+
+  spreadRelayout = setTimeout(() => {
+    spreadRelayout = null;
+
+    if (request === spreadRequest) queueSpread(id, request);
+  }, spreadRelayoutMs);
 }
 
 function watchSpreadFrames(): void {
   spreadFrames?.disconnect();
   spreadFrames = new ResizeObserver((entries) => {
     for (const entry of entries) {
-      if (entry.target instanceof HTMLElement) void frameSpreadElement(entry.target);
+      if (entry.target instanceof HTMLElement && entry.target.hasAttribute("data-gallery-spread")) {
+        void frameSpreadElement(entry.target);
+      }
     }
+
+    refreshSpread();
   });
+
+  const canvas = fieldCanvas();
+
+  if (canvas) spreadFrames.observe(canvas);
 
   for (const spread of allSpreads()) {
     spreadFrames.observe(spread);
     void frameSpreadElement(spread);
   }
+}
+
+/** The field drawing of the `[data-spread]` block `id` in the newest pane layer, if it has one. */
+function drawingFor(id: string | null): string | null {
+  if (!id) return null;
+
+  const layer = [...document.querySelectorAll<HTMLElement>("[data-pane-slot] > [data-pane-layer]")].at(-1);
+  const blocks = layer?.querySelectorAll<HTMLElement>("[data-spread-drawing]") ?? [];
+
+  return [...blocks].find((block) => block.dataset.spread === id)?.dataset.spreadDrawing ?? null;
 }
 
 /** Fades in the gallery spread `id` and fades out the rest. */
@@ -201,54 +262,70 @@ async function revealSpread(current: Field, id: string, request: number): Promis
   if (!canvas || !spread) return;
 
   const photos = [...spread.querySelectorAll<HTMLImageElement>("[data-spread-photo]")];
-  const box = spread.getBoundingClientRect();
-  const origin = canvas.getBoundingClientRect();
-  const placement: Placement = { x: box.left - origin.left, y: box.top - origin.top, width: box.width, height: box.height };
-  const seam = Number.parseFloat(getComputedStyle(spread).getPropertyValue("--seam")) || 0;
 
-  const [{ spreadScene }, { frameSpread }] = await Promise.all([
-    import("./scenes/drawings"),
-    import("./scenes/cover"),
-  ]);
+  const isCurrent = () => request === spreadRequest && field === current && paneState.spread === id
+    && fieldCanvas() === canvas && spread.isConnected && !spread.hasAttribute("data-leaving");
 
-  await Promise.all(photos.map((photo) => photo.decode().catch(() => {})));
-  frameSpread(spread);
+  try {
+    const [{ spreadScene }, { frameSpread }] = await Promise.all([
+      import("./scenes/drawings"),
+      import("./scenes/cover"),
+    ]);
 
-  const scene = await spreadScene(
-    photos.map((photo) => photo.getAttribute("src") ?? ""),
-    layoutOf(canvas),
-    {
+    await Promise.all(photos.map((photo) => photo.decode()));
+
+    if (!isCurrent()) return;
+
+    frameSpread(spread);
+    // Read geometry after decoding, then paint synchronously from the same DOM images.
+    const { layout, placement, seam, key } = spreadGeometry(canvas, spread);
+
+    if (!capable(canvas) || placement.width === 0 || placement.height === 0) {
+      develop(id);
+      current.setOverride(null);
+
+      return;
+    }
+
+    const scene = spreadScene(photos, layout, {
       layout: spread.dataset.layout === "diagonal" ? "diagonal" : "full",
       placement,
       seam,
-    },
-  );
+    });
 
-  if (request !== spreadRequest || field !== current) return;
+    spreadLayoutKey = key;
+    current.setOverride(scene);
+    await current.whenSceneIdle();
 
-  current.setOverride(scene);
-  await current.whenSceneIdle();
+    if (!isCurrent()) return;
 
-  if (request === spreadRequest) develop(id);
+    if (spreadGeometry(canvas, spread).key !== key) {
+      refreshSpread();
+
+      return;
+    }
+
+    develop(id);
+  } catch (error) {
+    if (!isCurrent()) return;
+
+    console.info("[field] photo failed", error);
+    current.setOverride(null);
+    develop(id);
+  }
 }
 
-function showSpread(id: string | null): void {
-  const request = ++spreadRequest;
+function queueSpread(id: string, request: number): void {
   const canvas = fieldCanvas();
+  const spread = gallerySpreads().find((candidate) => candidate.dataset.gallerySpread === id);
 
-  develop(null);
-
-  if (!id) {
+  if (!canvas || !spread || !capable(canvas) || spread.clientWidth === 0 || spread.clientHeight === 0
+    || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    develop(id);
     field?.setOverride(null);
 
     return;
   }
-
-  if (!canvas || !capable(canvas) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    develop(id);
-  }
-
-  if (!canvas || !capable(canvas)) return;
 
   whenField((current) => {
     if (request === spreadRequest) void revealSpread(current, id, request);
@@ -257,6 +334,34 @@ function showSpread(id: string | null): void {
   void booting?.then(() => {
     if (!field && request === spreadRequest) develop(id);
   });
+}
+
+function showSpread(id: string | null): void {
+  const request = ++spreadRequest;
+  const canvas = fieldCanvas();
+  const spread = gallerySpreads().find((candidate) => candidate.dataset.gallerySpread === id);
+
+  if (spreadRelayout) clearTimeout(spreadRelayout);
+  spreadRelayout = null;
+  spreadLayoutKey = canvas && spread ? spreadGeometry(canvas, spread).key : null;
+  develop(null);
+
+  if (!id) {
+    field?.setOverride(null);
+
+    return;
+  }
+
+  queueSpread(id, request);
+}
+
+/** A drawing block hands the field its drawing; any other spread may be a gallery photo. */
+function followSpread(id: string | null): void {
+  const drawing = drawingFor(id);
+
+  field?.setDrawing(drawing);
+  // Always through `showSpread`: it also releases a photo still held from the page before.
+  showSpread(drawing ? null : id);
 }
 
 function boot(): void {
@@ -292,6 +397,7 @@ function boot(): void {
 
         field = created;
         boundCanvas = canvas;
+        created.setDrawing(drawingFor(paneState.spread));
         notifyReady(created);
 
         if (paneState.lost) void paintLost(created);
@@ -339,14 +445,34 @@ export function initField(): void {
     void upgrade().then(() => field?.prewarm(id));
   });
 
-  onSpreadChange(showSpread);
+  onSpreadChange(followSpread);
 
-  if (paneState.spread) showSpread(paneState.spread);
+  window.addEventListener("resize", refreshSpread, { passive: true });
+  document.addEventListener("load", (event) => {
+    const photo = event.target;
+
+    if (!(photo instanceof HTMLImageElement) || !photo.hasAttribute("data-spread-photo")) return;
+
+    const spread = photo.closest<HTMLElement>("[data-gallery-spread]");
+
+    if (spread) void frameSpreadElement(spread);
+
+    if (photo.closest("[data-gallery]")) refreshSpread();
+  }, true);
+
+  if (paneState.spread) followSpread(paneState.spread);
 
   onLostChange((lost) => {
     whenField((current) => {
-      if (lost) void paintLost(current);
-      else clearLost(current);
+      if (!lost) {
+        clearLost(current);
+
+        return;
+      }
+
+      // Drop the section first, so a relayout can't bring its drawing back over the 404.
+      current.setSection(null);
+      void paintLost(current);
     });
   });
 

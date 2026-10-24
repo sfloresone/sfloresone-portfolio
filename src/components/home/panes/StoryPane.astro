@@ -1,43 +1,95 @@
 ---
 import Pane from "../Pane.astro";
+import SectionLabel from "../SectionLabel.astro";
+import StoryPolaroids from "../StoryPolaroids.astro";
 import StorySpread from "../StorySpread.astro";
 import { story } from "../../../data/site";
-import { loadStorySpreads, type StorySpread as Spread } from "../../../data/story";
+import { loadStorySpreads } from "../../../data/story";
 
 const spreads = await loadStorySpreads();
 
-const blocks: { spread: Spread; paragraphs: string[] }[] = [
+const skyline = spreads.skyline;
+
+type Section = { label?: string; paragraphs: string[] };
+
+/** Story body, in reading order. One spread covers the whole piece. */
+const sections: Section[] = [
   {
-    spread: spreads.skyline,
     paragraphs: [
-      "Madrid is where most of what I build starts: between classes at the Universidad Politécnica and the peer-to-peer sessions at 42 Madrid.",
+      "Hey, thanks for stopping by.",
+      "I'm Sergio Flores, a 20 year old 🇪🇸 software engineer based in Madrid. At my core, I'm simply someone obsessed with figuring out how things work and pulling abstract ideas into reality. Software just happens to be best medium I've found to do that.",
     ],
   },
   {
-    spread: spreads.madrid,
-    paragraphs: ["Somewhere between flights, I keep sketching the next thing I want to ship."],
+    label: "How I operate",
+    paragraphs: [
+      "I'm not the smartest guy in the room, and honestly, I never want to be. That doesn't mean I don't push my self to the limit or care about top-tier performance. It's just how I view the world: humility, honesty and low-ego/high-trust environments, lay the perfect foundation to push anything from concept to production.",
+      "Don't confuse this mindset with a tolerance for incompetence. I expect to work alongside sharp, realiable people. However, genuine synergy is the non-negotiable key for me.",
+      "My friends tell me I have unconscius 'rituals' in every aspect of day-to-day life. What they really mean is that I'm deeply methodical about structure, clarity and execution.",
+    ],
+  },
+  {
+    label: "Why I build",
+    paragraphs: [
+      "If I don't believe in the goal, it's really hard for me to even get started. I have to care about what I'm building. That's why I will always choose to work with teams that genuinely believe in their mission and have real skin in the game.",
+      "For example: when I say I'd love to wor at a place like SpaceX/XSI, it's not an empty flex. I actually believe in the need to unlock unlock an interplanetary economy and eventually put data centers in orbit. Earth is going to feel small within a few decades. Pushing past the borders of our home isn't just cool engineering; it's a necessary step for us to progress as a species. My drive doesn't come from money or politics. I simply believe in the future of humanity.",
+      "I want to contribute to that future. Whether that means optimizing the underlying layers of an LLM inference engine, shaping the UX of a tool like Cursor/Grok, or building applied infrastructure across the full stack, I want to build things that move US forward. So yeah, that's what usually gets my blood pumping.",
+    ],
+  },
+  {
+    label: "Off the clock",
+    paragraphs: [
+      "Outside of work, I still like making things. Just like most people in the industry, I simply love building from scratch.",
+      "Music is deeply ingrained  in me. My dad is a DJ, so sound has always been the backdrop of my life. I've produced tracks, played the guitar, and just enough piano to sketch ideas out when producing.",
+      "Software, music and design are just different ways for the exact same goal: building things ❤️‍🔥",
+      "From SF (Sergio Flores) to the world.",
+    ],
   },
 ];
+
+function sectionId(label: string): string {
+  return `story-${label.toLowerCase().replaceAll(" ", "-")}`;
+}
 ---
 
 <Pane id="about" title={story.label} closeHref="/about">
-  <div class="flex max-w-[68ch] flex-col gap-10">
+  <div class="flex max-w-[68ch] flex-col gap-10" data-spread={skyline.id}>
     {
-      blocks.map(({ spread, paragraphs }) => (
-        <section class="flex flex-col gap-4" data-spread={spread.id}>
-          {paragraphs.map((text) => (
-            <p>{text}</p>
-          ))}
-          <div
-            class:list={[
-              "relative hidden w-full max-[900px]:block",
-              spread.layout === "full" ? "aspect-[5/4]" : "aspect-[4/5]",
-            ]}
-          >
-            <StorySpread spread={spread} sizes="100vw" developed />
-          </div>
-        </section>
-      ))
+      sections.map(({ label, paragraphs }) =>
+        label ? (
+          <section aria-labelledby={sectionId(label)}>
+            <SectionLabel id={sectionId(label)}>{label}</SectionLabel>
+            <div class="flex flex-col gap-4">
+              {paragraphs.map((text) => (
+                <p>{text}</p>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section class="flex flex-col gap-4" aria-label="Introduction">
+            {paragraphs.map((text) => (
+              <p>{text}</p>
+            ))}
+          </section>
+        ),
+      )
     }
+
+    <div
+      class:list={[
+        "relative hidden w-full [@media(max-width:899px)]:block compact:block",
+        skyline.layout === "full" ? "aspect-[5/4]" : "aspect-[4/5]",
+        // Mobile and compact windows have no field behind the photo: it grows out of its own dots, swept along the seam.
+        "[mask-image:radial-gradient(circle,#000_var(--dot),transparent_calc(var(--dot)+0.5px)),linear-gradient(135deg,#000_var(--sweep),transparent_calc(var(--sweep)+12%))] [mask-size:8px_8px,100%_100%] [mask-repeat:repeat,no-repeat]",
+        "[--dot:1px] [--sweep:-15%] transition-[--dot,--sweep] duration-1600 ease-[cubic-bezier(0.45,0,0.2,1)] data-revealed:[--dot:6px] data-revealed:[--sweep:115%] motion-reduce:transition-none",
+      ]}
+      data-dot-reveal
+    >
+      <StorySpread spread={skyline} sizes="(max-width: 899px) 100vw, 60vw" developed />
+    </div>
   </div>
+
+  <section class="mt-12.5 max-w-[68ch]" aria-label="Photos">
+    <StoryPolaroids />
+  </section>
 </Pane>

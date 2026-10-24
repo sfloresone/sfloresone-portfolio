@@ -1,0 +1,60 @@
+---
+import { loadPolaroids } from "../../data/story";
+
+const polaroids = await loadPolaroids();
+
+// Alternating tilts fan the prints out; each one straightens when hovered or focused.
+const tilts = ["-rotate-3", "rotate-2", "-rotate-1"];
+---
+
+<ul
+  class="flex justify-center pb-unit transition-opacity duration-300 ease-out in-data-leaving:opacity-0 motion-reduce:transition-none"
+  aria-label="Photos"
+>
+  {
+    polaroids.map((polaroid, index) => (
+      <li
+        class:list={[
+          "group relative w-[34%] max-w-56 shrink-0 not-first:-ml-[2%] hover:z-10 focus-within:z-10",
+          index % 2 === 1 && "mt-unit",
+        ]}
+      >
+        <figure
+          class:list={[
+            "m-0 bg-ink p-[6%] pb-[4%] shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-transform duration-500 ease-out group-hover:rotate-0 group-focus-within:rotate-0 motion-reduce:transition-none",
+            tilts[index % tilts.length],
+          ]}
+        >
+          {polaroid.photo ? (
+            <button
+              type="button"
+              class="block aspect-square w-full cursor-zoom-in overflow-hidden border-0 bg-surface p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-canvas"
+              aria-label={`View ${polaroid.photo.alt}`}
+              data-lightbox-src={polaroid.photo.full}
+              data-lightbox-alt={polaroid.photo.alt}
+            >
+              <img
+                class="size-full object-cover grayscale-[0.6] transition-[filter] duration-500 group-hover:grayscale-0 motion-reduce:transition-none"
+                src={polaroid.photo.src}
+                srcset={polaroid.photo.srcset}
+                sizes="(max-width: 899px) 40vw, 224px"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </button>
+          ) : (
+            <span
+              class="block aspect-square w-full bg-surface bg-size-[var(--unit)_var(--unit)] [background-image:linear-gradient(to_right,var(--color-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-line)_1px,transparent_1px)]"
+              aria-hidden="true"
+            ></span>
+          )}
+          <figcaption class="mt-[0.7em] text-center leading-[1.3] text-canvas">
+            <span class="block text-[0.8rem] text-balance italic">{polaroid.caption}</span>
+            <span class="block text-[0.65rem] text-muted tabular-nums">{polaroid.date}</span>
+          </figcaption>
+        </figure>
+      </li>
+    ))
+  }
+</ul>

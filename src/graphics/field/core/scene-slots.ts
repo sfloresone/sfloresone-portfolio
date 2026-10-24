@@ -29,8 +29,8 @@ export class SceneSlots {
 
   #current = 0;
   #pending: Uint8Array | null = null;
-  #pendingFromCol = -1;
-  #fromCol = -1;
+  #pendingFromPane = -1;
+  #fromPane = -1;
   #start = -Infinity;
   #seed = 0;
   #version = 0;
@@ -76,9 +76,9 @@ export class SceneSlots {
     return this.#seed;
   }
 
-  /** Active close-from column, or -1 for the normal open morph. */
-  get fromCol(): number {
-    return this.#fromCol;
+  /** Active closing front as a fraction of the pane, or -1 for an opening morph. */
+  get fromPane(): number {
+    return this.#fromPane;
   }
 
   progress(now: number): number {
@@ -91,10 +91,10 @@ export class SceneSlots {
     return this.#pending !== null || (p > 0 && p < 1);
   }
 
-  /** Queues a scene; it lands on the next rendered frame. `fromCol` (>= 0) runs the wipe right to left from there. */
-  request(scene: SceneField | null, fromCol = -1): void {
+  /** `fromPane` (>= 0) starts a closing wipe at that fraction of the pane width. */
+  request(scene: SceneField | null, fromPane = -1): void {
     this.#pending = scene ? scene.data : this.#empty;
-    this.#pendingFromCol = fromCol;
+    this.#pendingFromPane = fromPane;
   }
 
   /**
@@ -108,17 +108,17 @@ export class SceneSlots {
 
     this.#pending = null;
 
-    const fromCol = this.#pendingFromCol;
+    const fromPane = this.#pendingFromPane;
     const progress = this.progress(now);
 
-    this.#pendingFromCol = -1;
+    this.#pendingFromPane = -1;
 
     // A settled transition still needs the bake: what is on screen is B, and A holds an older scene.
     if (progress > 0) {
       const next = 1 - this.#current;
 
       uniforms.scene[0] = progress;
-      uniforms.scene[2] = this.#fromCol;
+      uniforms.scene[2] = this.#fromPane;
       this.#bake.set({ u: uniforms, sceneA: this.outgoing, sceneB: this.#incoming, baked: this.#outgoing[next] });
       this.#bake.dispatch(Math.ceil(sceneTexels / bakeWorkgroup), Math.ceil(sceneTexels / bakeWorkgroup));
       this.#current = next;
@@ -128,7 +128,7 @@ export class SceneSlots {
       sceneTexels,
       sceneTexels,
     ]);
-    this.#fromCol = fromCol;
+    this.#fromPane = fromPane;
     this.#seed = (this.#seed + 7.31) % 97;
     this.#start = instant ? now - transitionMs : now;
     this.#version += 1;

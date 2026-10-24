@@ -28,51 +28,44 @@ const hasPane = Astro.slots.has("default");
   >
     <div class="shell-surface" aria-hidden="true"></div>
 
-    <aside class="shell-deck">
-      <Deck active={active} />
-    </aside>
+    <div class="shell-stage" data-shell-stage>
+      <aside class="shell-deck" data-shell-deck>
+        <Deck active={active} />
+      </aside>
 
-    <section class="shell-pane" data-pane-slot aria-live="polite">
-      {
-        hasPane && (
-          <div class="pane-layer" data-pane-layer={Astro.url.pathname}>
-            <slot />
-          </div>
-        )
-      }
-    </section>
+      <section class="shell-pane" data-pane-slot aria-live="polite">
+        {
+          hasPane && (
+            <div class="pane-layer" data-pane-layer={Astro.url.pathname}>
+              <slot />
+            </div>
+          )
+        }
+      </section>
+
+      <div class="shell-runway" data-shell-runway aria-hidden="true"></div>
+    </div>
 
     <div class="shell-field" data-field transition:persist="field">
       <canvas class="shell-canvas" data-field-canvas aria-hidden="true"></canvas>
     </div>
 
     <div
-      class="pointer-events-none absolute top-(--rail) right-0 bottom-(--rail) left-[calc(var(--col2-left)+var(--pane-w))] z-2 max-[900px]:hidden in-data-lost:hidden"
+      class="pointer-events-none absolute top-(--rail) right-0 bottom-(--rail) left-[calc(var(--col2-left)+var(--pane-w))] z-2 [@media(max-width:899px)]:hidden compact:hidden in-data-lost:hidden"
     >
       <div class="absolute inset-0" data-gallery>
         <slot name="gallery" />
       </div>
     </div>
-
-    <div
-      class="pointer-events-none absolute inset-[var(--rail)_0_var(--rail)_var(--rail)] z-5 hidden items-end justify-center pb-[clamp(3rem,12vh,6rem)] in-[.is-lost-ready]:flex"
-    >
-      <a
-        class="pointer-events-auto text-muted transition-[color] duration-300 ease-linear hover:text-ink focus-visible:text-ink focus-visible:outline-none"
-        href="/"
-      >
-        Home
-      </a>
-    </div>
   </div>
 
   <dialog
-    class="fixed inset-0 m-0 size-full max-h-none max-w-none overflow-hidden overscroll-none border-0 bg-transparent p-0 text-ink backdrop:bg-black/84 backdrop:opacity-0 backdrop:transition-opacity backdrop:duration-400 data-ready:backdrop:opacity-100 motion-reduce:backdrop:transition-none"
+    class="fixed inset-0 m-0 size-full max-h-none max-w-none overflow-hidden overscroll-none border-0 bg-transparent p-0 text-ink backdrop:bg-black/84 backdrop:opacity-0 backdrop:transition-opacity backdrop:duration-550 data-ready:backdrop:opacity-100 motion-reduce:backdrop:duration-150 motion-reduce:backdrop:transition-none"
     data-lightbox
     aria-labelledby="lightbox-caption"
   >
     <div
-      class="absolute inset-0 scale-[0.98] opacity-0 transition-[opacity,transform] duration-400 ease-out data-ready:scale-100 data-ready:opacity-100 motion-reduce:scale-100 motion-reduce:transition-none"
+      class="absolute inset-0 translate-y-2 opacity-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] data-ready:translate-y-0 data-ready:opacity-100 motion-reduce:translate-y-0 motion-reduce:duration-150 motion-reduce:transition-none"
       data-lightbox-shell
     >
       <div
@@ -82,7 +75,7 @@ const hasPane = Astro.slots.has("default");
         role="group"
         aria-labelledby="lightbox-caption"
       >
-        <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-14">
+        <div class="absolute inset-0 flex items-center justify-center p-4 pt-16 sm:p-14 sm:pt-16">
           <img
             class="max-h-full max-w-full origin-center object-contain select-none transition-transform duration-300 ease-out motion-reduce:transition-none"
             data-lightbox-image
@@ -93,13 +86,16 @@ const hasPane = Astro.slots.has("default");
         </div>
       </div>
 
-      <div class="pointer-events-none absolute inset-0 z-1 flex items-start justify-between gap-3 p-3 sm:p-4">
+      <div
+        class="pointer-events-none absolute inset-x-0 top-0 z-1 min-h-14 opacity-0 transition-opacity duration-400 ease-out delay-0 in-data-ready:opacity-100 in-data-ready:delay-100 motion-reduce:delay-0 motion-reduce:duration-150 motion-reduce:transition-none"
+        data-lightbox-chrome
+      >
         <p
-          class="pointer-events-auto m-0 max-w-[65%] truncate rounded-full bg-chip px-3 py-1.5 text-[0.8rem] text-ink"
+          class="pointer-events-auto absolute top-3 left-1/2 m-0 w-max max-w-[min(36rem,calc(100%-5.5rem))] -translate-x-1/2 rounded-full bg-chip px-3 py-1.5 text-center text-[0.8rem] leading-snug text-balance text-ink"
           id="lightbox-caption"
           data-lightbox-caption
         ></p>
-        <div class="pointer-events-auto flex items-center gap-2">
+        <div class="pointer-events-auto absolute top-3 right-3 flex items-center gap-2 sm:right-4">
           <button
             type="button"
             class="grid size-8 place-items-center rounded-full bg-chip text-ink transition-[color,background-color] duration-200 ease-linear hover:bg-ink hover:text-[#121212] focus-visible:bg-ink focus-visible:text-[#121212] focus-visible:outline-none"
@@ -138,6 +134,8 @@ const hasPane = Astro.slots.has("default");
   import { initPanes } from "../../scripts/panes/controller";
   import { initField } from "../../graphics/field/mount";
   import { initLightbox } from "../../scripts/lightbox";
+  import { initDotReveal } from "../../scripts/dot-reveal";
+  import { mobileQuery } from "../../scripts/panes/layout-queries";
 
   initPanes();
 
@@ -145,7 +143,23 @@ const hasPane = Astro.slots.has("default");
 
   initLightbox();
 
+  initDotReveal();
+
   function scrollRoot(): HTMLElement {
+    const shell = document.querySelector<HTMLElement>("[data-shell]");
+    const mobile = window.matchMedia(mobileQuery).matches;
+
+    if (mobile) {
+      const pane = document.querySelector<HTMLElement>("[data-pane-slot]:not(:empty)");
+      const layer = pane?.querySelector<HTMLElement>("[data-pane-layer]");
+
+      if (layer) return layer;
+
+      const deck = document.querySelector<HTMLElement>("[data-shell-deck]");
+
+      if (deck) return deck;
+    }
+
     const layer = document.querySelector<HTMLElement>("[data-pane-layer]");
 
     if (layer) {

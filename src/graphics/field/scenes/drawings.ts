@@ -1,5 +1,5 @@
 import type { Placement, SceneField, SceneLayout } from "../types";
-import { coverPlacement, halfTarget } from "./cover";
+import { coverPlacement, halfTarget, readFocus } from "./cover";
 import { rasterScene, type SceneMode } from "./raster";
 
 export interface TextOptions {
@@ -59,7 +59,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return pending;
 }
 
-/** Any raster or SVG image; photos read best in `luminance` mode. */
+/** Any raster or SVG image; `photo` preserves continuous photographic tones. */
 export async function imageScene(src: string, layout: SceneLayout, options: ImageOptions = {}): Promise<SceneField> {
   const image = await loadImage(src);
   const aspect = image.naturalWidth / Math.max(image.naturalHeight, 1);
@@ -84,8 +84,7 @@ export interface SpreadOptions {
  * split by the bottom-left to top-right diagonal with the same seam as the gallery.
  * Each photo is cover-fit with its center on the half centroid (or box center).
  */
-export async function spreadScene(srcs: string[], layout: SceneLayout, options: SpreadOptions): Promise<SceneField> {
-  const photos = await Promise.all(srcs.map(loadImage));
+export function spreadScene(photos: readonly HTMLImageElement[], layout: SceneLayout, options: SpreadOptions): SceneField {
   const seam = options.seam ?? 0;
   const { placement } = options;
 
@@ -125,6 +124,7 @@ export async function spreadScene(srcs: string[], layout: SceneLayout, options: 
           width,
           height,
           halfTarget(options.layout === "diagonal" ? index : null),
+          readFocus(photo),
         );
 
         context.drawImage(photo, rect.x, rect.y, rect.width, rect.height);
@@ -132,38 +132,6 @@ export async function spreadScene(srcs: string[], layout: SceneLayout, options: 
       });
     },
     layout,
-    { aspect: placement.width / Math.max(placement.height, 1), mode: "luminance", placement },
-  );
-}
-
-/** A vertical rail with one node and one bar per stop, newest first. */
-export function timelineScene(stops: number, layout: SceneLayout, aspect = 0.8): SceneField {
-  const count = Math.max(1, stops);
-
-  return rasterScene(
-    (context, width, height) => {
-      const railX = width * 0.16;
-      const top = height * 0.06;
-      const bottom = height * 0.94;
-      const gap = (bottom - top) / count;
-      const stroke = Math.max(10, width * 0.035);
-
-      context.fillStyle = "#fff";
-      context.fillRect(railX - stroke / 2, top, stroke, bottom - top);
-
-      for (let i = 0; i < count; i++) {
-        const y = top + gap * (i + 0.5);
-        const radius = width * (i === 0 ? 0.075 : 0.06);
-        const barLength = width * (0.62 - (i % 3) * 0.12);
-
-        context.beginPath();
-        context.arc(railX, y, radius, 0, Math.PI * 2);
-        context.fill();
-        context.fillRect(railX + radius * 1.8, y - stroke * 1.1, barLength, stroke * 2.2);
-        context.fillRect(railX + radius * 1.8, y + stroke * 2.4, barLength * 0.55, stroke * 1.2);
-      }
-    },
-    layout,
-    { aspect },
+    { aspect: placement.width / Math.max(placement.height, 1), mode: "photo", placement },
   );
 }

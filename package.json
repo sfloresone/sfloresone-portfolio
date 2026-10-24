@@ -8,15 +8,13 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "wrangler pages dev ./dist --port 4321",
+    "preview": "astro preview",
     "astro": "astro",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
-    "d1:migrate:local": "wrangler d1 migrations apply sfloresone-visitors --local",
-    "d1:migrate:remote": "wrangler d1 migrations apply sfloresone-visitors --remote"
+    "test:mobile": "bun run build && bun tests/mobile-navigation.browser.mjs"
   },
   "dependencies": {
-    "@astrojs/mdx": "6.0.3",
     "astro": "^6.4.2",
     "vgpu": "^0.5.0"
   },
@@ -25,8 +23,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "oxlint": "1.85.0",
     "playwright": "^1.61.0",
-    "tailwindcss": "^4.3.0",
-    "wrangler": "^4.118.0"
+    "tailwindcss": "^4.3.0"
   },
   "overrides": {
     "vite": "^7"

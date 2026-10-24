@@ -1,6 +1,7 @@
 import { navigate, swapFunctions } from "astro:transitions/client";
 import type { TransitionBeforePreparationEvent, TransitionBeforeSwapEvent } from "astro:transitions/client";
-import { shellPaths, type SectionId } from "../../data/site";
+import { shellPaths, type SectionId } from "../../data/routes";
+import { initMobileCamera, syncCameraToSection } from "./mobile-camera";
 import { watchSpreads } from "./spreads";
 import { RevealGrid } from "./reveal-grid";
 import { announceIntent, announceLost, announceSection, isSectionId, paneState, routeKey } from "./state";
@@ -102,28 +103,28 @@ export function revealFrontCol(): number {
 
 function enterLost(shell: HTMLElement): void {
   shell.setAttribute("data-lost", "");
-  shell.classList.remove("is-lost-ready");
   shell.dataset.active = "";
   syncDeck(null);
   document.title = "404 — Sergio Flores";
   watchSpreads(null);
   announceLost(true);
+  void syncCameraToSection(null, { animate: false });
 }
 
 function leaveLost(shell: HTMLElement): void {
   shell.removeAttribute("data-lost");
-  shell.classList.remove("is-lost-ready");
   announceLost(false);
 }
 
-function swapPane(newDocument: Document): void {
+/** `toPath` is the destination: during the swap `location` may still hold the page being left. */
+function swapPane(newDocument: Document, toPath: string): void {
   const shell = shellRoot();
   const nextShell = shellRoot(newDocument);
   const reveal = currentGrid();
 
   if (!shell || !nextShell || !reveal) return;
 
-  if (isLost(nextShell) || !isKnownPath(location.pathname)) {
+  if (isLost(nextShell) || !isKnownPath(toPath)) {
     enterLost(shell);
 
     return;
@@ -137,8 +138,8 @@ function swapPane(newDocument: Document): void {
   shell.dataset.active = to ?? "";
   syncDeck(to);
   swapGallery(newDocument);
-  announceSection(to);
   reveal.show(to, routeKey(nextLayer?.dataset.paneLayer ?? ""), nextLayer ? document.adoptNode(nextLayer) : null);
+  announceSection(to);
   watchSpreads(to ? newestLayer() : null);
 }
 
@@ -147,6 +148,9 @@ function swapPane(newDocument: Document): void {
  * Astro still updates the URL after prep; before-swap only runs enterLost.
  */
 function onBeforePreparation(event: TransitionBeforePreparationEvent): void {
+  // Any way out of the current page starts its fade at once, before the next page arrives.
+  if (routeKey(event.to.pathname) !== routeKey(location.pathname)) newestLayer()?.setAttribute("data-leaving", "");
+
   if (!shellRoot() || isKnownPath(event.to.pathname)) return;
 
   event.loader = async () => {
@@ -193,7 +197,7 @@ function onBeforeSwap(event: TransitionBeforeSwapEvent): void {
     swapFunctions.deselectScripts(event.newDocument);
     swapFunctions.swapRootAttributes(event.newDocument);
     swapFunctions.swapHeadElements(event.newDocument);
-    swapPane(event.newDocument);
+    swapPane(event.newDocument, event.to.pathname);
   };
 }
 
@@ -218,6 +222,19 @@ function onDeckIntent(event: Event): void {
   const id = event.target.closest<HTMLElement>("[data-deck-link]")?.dataset.deckLink;
 
   if (isSectionId(id)) announceIntent(id);
+}
+
+function onEscape(event: KeyboardEvent): void {
+  if (event.key !== "Escape" || event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
+
+  if (!paneState.active || paneState.lost) return;
+
+  const lightbox = document.querySelector<HTMLDialogElement>("[data-lightbox]");
+
+  if (lightbox?.open) return;
+
+  event.preventDefault();
+  void navigate("/");
 }
 
 function syncFromDocument(): void {
@@ -245,6 +262,7 @@ export function initPanes(): void {
   if (initialized) return;
 
   initialized = true;
+  initMobileCamera();
   syncFromDocument();
 
   document.addEventListener("astro:before-preparation", onBeforePreparation);
@@ -253,4 +271,5 @@ export function initPanes(): void {
   document.addEventListener("click", onDeckClick, { capture: true });
   document.addEventListener("pointerover", onDeckIntent, { passive: true });
   document.addEventListener("focusin", onDeckIntent);
+  document.addEventListener("keydown", onEscape);
 }

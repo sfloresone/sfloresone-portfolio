@@ -2,7 +2,16 @@ export interface QualityLevel {
   maxDpr: number;
 }
 
-export const qualityLevels: readonly QualityLevel[] = [{ maxDpr: 2 }, { maxDpr: 1.5 }, { maxDpr: 1 }];
+export const qualityLevels: readonly QualityLevel[] = [
+  { maxDpr: 2 },
+  { maxDpr: 1.5 },
+  { maxDpr: 1 },
+];
+
+/** Narrow viewports start at DPR 1; point budgets are independent of raster quality. */
+export function initialQualityIndex(mobile: boolean): number {
+  return mobile ? qualityLevels.length - 1 : 0;
+}
 
 const windowMs = 2000;
 
@@ -12,21 +21,27 @@ const idleGapMs = 250;
 
 /**
  * Downgrade-only frame health: once presented frames stay slow for two seconds of active
- * time, ask for the next cheaper level. It never upgrades, so it cannot oscillate.
+ * time, ask for the next cheaper raster resolution. It never changes the drawing grid.
+ * It never upgrades, so it cannot oscillate.
  */
 export class QualityMonitor {
-  #level = 0;
+  #level: number;
   #slowMs = 0;
   #activeMs = 0;
   #warmupMs = 1500;
   #onChange: (level: QualityLevel) => void;
 
-  constructor(onChange: (level: QualityLevel) => void) {
+  constructor(onChange: (level: QualityLevel) => void, initialLevel = 0) {
     this.#onChange = onChange;
+    this.#level = Math.max(0, Math.min(qualityLevels.length - 1, initialLevel));
   }
 
   get level(): QualityLevel {
     return qualityLevels[this.#level];
+  }
+
+  get levelIndex(): number {
+    return this.#level;
   }
 
   reset(): void {

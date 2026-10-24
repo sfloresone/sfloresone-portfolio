@@ -11,6 +11,7 @@ import SpringBoot from "./SpringBoot.astro";
 import AstroIcon from "./AstroIcon.astro";
 import NodeJS from "./NodeJS.astro";
 import Bun from "./Bun.astro";
+import Golang from "./Golang.astro";
 import Hono from "./Hono.astro";
 import React from "./React.astro";
 import Git from "./Git.astro";
@@ -30,6 +31,13 @@ import Codex from "./Codex.astro";
 import Gemini from "./Gemini.astro";
 import Pi from "./Pi.astro";
 import Vercel from "./Vercel.astro";
+import Convex from "./Convex.astro";
+import Dokploy from "./Dokploy.astro";
+import PaymentApi from "./PaymentApi.astro";
+import Webhook from "./Webhook.astro";
+import Makefile from "./Makefile.astro";
+import Algorithms from "./Algorithms.astro";
+import DataStructures from "./DataStructures.astro";
 
 interface Props {
   name: string;
@@ -50,6 +58,7 @@ const icons = {
   Astro: AstroIcon,
   "Node.js": NodeJS,
   Bun,
+  Golang,
   Hono,
   React,
   Git,
@@ -69,6 +78,13 @@ const icons = {
   Gemini,
   Pi,
   Vercel,
+  Convex,
+  Dokploy,
+  "Payment APIs": PaymentApi,
+  Webhooks: Webhook,
+  Makefile,
+  Algorithms,
+  "Data Structures": DataStructures,
 } as const satisfies Record<string, typeof TypeScript>;
 
 const isIconName = (value: string): value is keyof typeof icons => Object.hasOwn(icons, value);

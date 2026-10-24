@@ -13,6 +13,7 @@ function mixColor(a: Rgba, b: Rgba, t: number): [number, number, number, number]
 export interface PaletteValues {
   base: [number, number, number, number];
   crest: [number, number, number, number];
+  accent: [number, number, number, number];
 }
 
 /** Crossfades between themes on the CPU; the shader only ever sees the current mix. */
@@ -43,6 +44,7 @@ export class Palette {
     return {
       base: mixColor(this.#from.base, this.#to.base, t),
       crest: mixColor(this.#from.crest, this.#to.crest, t),
+      accent: mixColor(this.#from.accent, this.#to.accent, t),
     };
   }
 }

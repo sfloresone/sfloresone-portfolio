@@ -9,6 +9,9 @@
 @source "../pages";
 @source "../components/icons/TechIcon.astro";
 
+/* Portrait or near-square desktop windows; keep in sync with `compactQuery` (layout-queries.ts). */
+@custom-variant compact (@media (min-width: 900px) and (max-aspect-ratio: 4/3));
+
 @theme {
   --spacing-unit: 20px;
   --font-sans: var(--font-neue-montreal), sans-serif;
@@ -38,6 +41,25 @@
   &:focus-visible {
     color: var(--color-ink);
     text-decoration-color: currentColor;
+  }
+}
+
+/* Prose blocks that embed links from site data (not Astro markup). */
+@utility pane-prose {
+  & a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-decoration-color: var(--color-underline);
+    text-underline-offset: 3px;
+    transition:
+      color 0.3s linear,
+      text-decoration-color 0.3s linear;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-ink);
+      text-decoration-color: currentColor;
+    }
   }
 }
 
@@ -120,6 +142,11 @@
     background: var(--color-surface);
   }
 
+  /* Desktop: transparent wrapper so deck/pane stay absolutely positioned on .shell. */
+  .shell-stage {
+    display: contents;
+  }
+
   .shell-deck {
     position: absolute;
     top: var(--rail);
@@ -147,6 +174,11 @@
     inset: var(--rail) 0 var(--rail) var(--col2-left);
     z-index: 2;
     pointer-events: none;
+  }
+
+  /* Ambient light runway after the pane column; only used on the mobile stage. */
+  .shell-runway {
+    display: none;
   }
 
   .shell-canvas {
@@ -249,6 +281,14 @@
     }
   }
 
+  /* Compact window: the pane takes the room, the field stays as an ambient strip on the right. */
+  @media (min-width: 900px) and (max-aspect-ratio: 4/3) {
+    .shell {
+      --deck-w: round(nearest, calc((100% - var(--rail)) * 0.25), var(--unit));
+      --pane-w: round(nearest, calc((100% - var(--rail)) * 0.5), var(--unit));
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .shell {
       --pane-motion-duration: 120ms;
@@ -257,61 +297,110 @@
   }
 
   @media (max-width: 899px) {
-    html:not(:has([data-lost])),
-    body:not(:has([data-lost])),
-    body:not(:has([data-lost])) > main {
-      height: auto;
-      overflow: visible;
-      scrollbar-width: none;
+    .shell {
+      --mobile-col-w: min(300px, round(down, calc(100vw - var(--rail-left) - max(var(--rail-right), var(--unit))), var(--unit)));
+      --mobile-runway-w: 80vw;
+      --rail-top: max(var(--rail), env(safe-area-inset-top, 0px));
+      --rail-right: max(0px, env(safe-area-inset-right, 0px));
+      --rail-bottom: max(var(--rail), env(safe-area-inset-bottom, 0px));
+      --rail-left: max(var(--rail), env(safe-area-inset-left, 0px));
     }
 
-    html:not(:has([data-lost]))::-webkit-scrollbar,
-    body:not(:has([data-lost]))::-webkit-scrollbar {
+    .shell .shell-surface {
       display: none;
     }
 
-    .shell:not([data-lost]) {
+    /* Full-bleed mesh under the transparent stage; panes stay opaque on top. */
+    .shell .shell-field {
+      display: block;
+      inset: var(--rail-top) var(--rail-right) var(--rail-bottom) var(--rail-left);
+    }
+
+    .shell .shell-stage {
       display: flex;
-      flex-direction: column;
-      min-height: 100svh;
-      height: auto;
-      padding: var(--rail);
-      overflow: visible;
+      flex-direction: row;
+      align-items: stretch;
+      position: absolute;
+      top: var(--rail-top);
+      right: var(--rail-right);
+      bottom: var(--rail-bottom);
+      left: var(--rail-left);
+      z-index: 4;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: none;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pinch-zoom;
+      background: transparent;
     }
 
-    .shell-surface,
-    .shell:not([data-lost]) .shell-field {
+    .shell .shell-stage::-webkit-scrollbar {
       display: none;
     }
 
-    .shell[data-lost] {
-      display: block;
-      height: 100svh;
-      min-height: 100svh;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    .shell[data-lost] .shell-surface,
-    .shell[data-lost] .shell-field {
-      display: block;
-    }
-
-    .shell-deck,
-    .shell-pane,
-    .pane-layer {
+    .shell .shell-deck,
+    .shell .shell-pane {
       position: relative;
       inset: auto;
-      width: auto;
-      overflow: visible;
-    }
-
-    .shell-pane {
-      margin-top: 1px;
+      top: auto;
+      right: auto;
+      bottom: auto;
+      left: auto;
+      flex: 0 0 var(--mobile-col-w);
+      width: var(--mobile-col-w);
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y pinch-zoom;
       background: var(--color-surface);
+      box-shadow: inset -1px 0 0 var(--color-line);
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-scrollbar) transparent;
     }
 
-    .shell-pane:empty {
+    .shell .shell-runway {
+      display: block;
+      flex: 0 0 var(--mobile-runway-w);
+      width: var(--mobile-runway-w);
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .shell .shell-deck::-webkit-scrollbar,
+    .shell .shell-pane::-webkit-scrollbar,
+    .shell .pane-layer::-webkit-scrollbar {
+      width: 3px;
+      display: block;
+    }
+
+    .shell .shell-deck::-webkit-scrollbar-thumb,
+    .shell .shell-pane::-webkit-scrollbar-thumb,
+    .shell .pane-layer::-webkit-scrollbar-thumb {
+      background: var(--color-scrollbar);
+      border-radius: 999px;
+    }
+
+    .shell .pane-layer {
+      position: absolute;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-scrollbar) transparent;
+      box-shadow: none;
+    }
+
+    .shell .shell-pane {
+      overflow: hidden;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .shell .shell-pane:not(:has([data-pane-layer])):not([data-camera-hold]) {
       display: none;
     }
   }

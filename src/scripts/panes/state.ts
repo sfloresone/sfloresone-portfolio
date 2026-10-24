@@ -1,7 +1,7 @@
 import type { SectionId } from "../../data/site";
 
-/** Rows the reveal can describe; the pane column never gets taller than this many cells. */
-export const maxRevealRows = 128;
+/** Initial capacity; the reveal grows to cover every CSS layout row when zoomed out. */
+export const initialRevealRows = 128;
 
 export interface PaneState {
   active: SectionId | null;
@@ -9,7 +9,9 @@ export interface PaneState {
   lost: boolean;
   /** Some pane layer is on screen, even partly. */
   hasLayers: boolean;
-  /** Id of the story spread whose text is being read, if any. */
+  /** The newest pane's geometric reveal has finished. */
+  revealReady: boolean;
+  /** Id of the `[data-spread]` block being read (a story spread or a field drawing), if any. */
   spread: string | null;
   /**
    * Per pane row, 4 floats: open cells, row shows a layer (1) or the veil (0), crest of the
@@ -34,12 +36,18 @@ export const revealTuning = {
   crestTailSeconds: 1.5,
 } as const;
 
+export const mobileRevealTuning = { ...revealTuning, openSeconds: 1.3, closeSeconds: 1.3, switchSeconds: 1.5 };
+
+/** Virtual world geometry; the GPU still renders only the viewport. */
+export const mobileCamera = { enabled: false, x: 0, worldWidth: 1, paneLeft: 0, paneWidth: 0 };
+
 export const paneState: PaneState = {
   active: null,
   lost: false,
   hasLayers: false,
+  revealReady: false,
   spread: null,
-  rows: new Float32Array(maxRevealRows * 4),
+  rows: new Float32Array(initialRevealRows * 4),
 };
 
 const sectionListeners = new Set<SectionListener>();

@@ -1,13 +1,10 @@
 // @ts-check
 import { defineConfig, fontProviders } from "astro/config";
-import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import { wgslVitePlugin } from "@vgpu/wgsl/loader-vite";
 
 export default defineConfig({
   site: "https://sflores.one",
-  integrations: [mdx()],
-
   prefetch: {
     defaultStrategy: "hover",
   },

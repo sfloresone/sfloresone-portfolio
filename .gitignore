@@ -1,6 +1,6 @@
-AGENTS.md
 .playwright-mcp
 .claude
+test-results/
 
 # build output
 dist/
@@ -28,10 +28,17 @@ pnpm-debug.log*
 .idea/
 .vscode/
 .agents
-tools/
-
-# wrangler files
-.wrangler
-.dev.vars*
-!.dev.vars.example
+tools/*
+!tools/oxlint/
+tools/oxlint/*
+!tools/oxlint/anti-slop/
+tools/oxlint/anti-slop/*
+!tools/oxlint/anti-slop/**
 !.env.example
+
+# local only: blog drafts and brand sources, agent skill lockfile
+drafts/
+skills-lock.json
+
+# local wrangler pages dev state
+.wrangler/

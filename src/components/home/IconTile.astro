@@ -1,24 +1,25 @@
 ---
+import { Image } from "astro:assets";
+import type { ImageSource } from "../../data/site";
+
 interface Props {
   /** A logo image, whitened to match the ink; without it the slot (an icon) is shown. */
-  src?: string;
+  src?: ImageSource;
   class?: string;
   imgClass?: string;
 }
 
 const { src, class: className, imgClass } = Astro.props;
+
+const imageClass = ["block size-full object-contain brightness-0 invert", imgClass];
 ---
 
 <span class:list={["flex shrink-0 items-center justify-center", className]} aria-hidden={src ? undefined : "true"}>
   {
-    src ? (
-      <img
-        class:list={["block size-full object-contain brightness-0 invert", imgClass]}
-        src={src}
-        alt=""
-        loading="lazy"
-        decoding="async"
-      />
+    typeof src === "string" ? (
+      <img class:list={imageClass} src={src} alt="" loading="lazy" decoding="async" />
+    ) : src ? (
+      <Image class:list={imageClass} src={src} alt="" width={96} format="webp" />
     ) : (
       <slot />
     )

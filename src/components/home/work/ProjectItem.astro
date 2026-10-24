@@ -1,0 +1,75 @@
+---
+import { Image } from "astro:assets";
+import Disclosure from "../Disclosure.astro";
+import Tag from "../Tag.astro";
+import type { Project } from "../../../data/site";
+
+interface Props {
+  project: Project;
+  index: number;
+}
+
+const { project, index } = Astro.props;
+
+const projectIsGithub = project.projectHref === project.githubHref;
+---
+
+<li
+  class="min-w-0 border-b border-line last:border-b-0"
+  data-spread={project.drawing && project.title.toLowerCase()}
+  data-spread-drawing={project.drawing}
+>
+  <article aria-labelledby={`project-title-${index}`}>
+    <Disclosure variant="card" contentClass="border-t border-line p-unit">
+      <span slot="media" class="block overflow-hidden border-b border-line bg-surface">
+        {
+          project.banner ? (
+            <Image
+              class="block h-auto w-full"
+              src={project.banner.src}
+              alt={project.banner.alt}
+              widths={[480, 960]}
+              sizes="(max-width: 899px) 100vw, 480px"
+              format="webp"
+            />
+          ) : (
+            <span
+              class="block aspect-[2/1] bg-size-[var(--unit)_var(--unit)] [background-image:linear-gradient(to_right,var(--color-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-line)_1px,transparent_1px)]"
+              aria-hidden="true"
+            ></span>
+          )
+        }
+      </span>
+
+      <span slot="summary" class="flex flex-col gap-3 p-unit pr-[calc(var(--unit)*2)]">
+        <span class="font-heading text-[1rem] leading-[1.35] font-semibold text-ink" id={`project-title-${index}`}>
+          {project.title}
+        </span>
+        <span class="line-clamp-3 text-[0.875rem] leading-[1.45] text-muted">{project.summary}</span>
+      </span>
+
+      <div class="flex flex-col gap-unit">
+        <nav class="flex flex-wrap items-center gap-x-unit gap-y-2 text-[0.8rem]" aria-label={`Links for ${project.title}`}>
+          {!projectIsGithub && (
+            <a
+              class="pane-link"
+              href={project.projectHref}
+              target={project.projectHref.startsWith("https://") ? "_blank" : undefined}
+              rel={project.projectHref.startsWith("https://") ? "noopener noreferrer" : undefined}
+            >
+              {project.projectHref.startsWith("/") ? "Read more" : "Project ↗"}
+            </a>
+          )}
+          <a class="pane-link" href={project.githubHref} target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+          {project.liveHref && (
+            <a class="pane-link" href={project.liveHref} target="_blank" rel="noopener noreferrer">Live ↗</a>
+          )}
+        </nav>
+
+        <ul class="flex flex-wrap gap-[0.4rem]" aria-label={`Technology used for ${project.title}`}>
+          {project.tags.map((tag) => <li><Tag name={tag} /></li>)}
+        </ul>
+      </div>
+    </Disclosure>
+  </article>
+</li>

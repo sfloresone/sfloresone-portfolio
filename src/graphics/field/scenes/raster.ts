@@ -1,7 +1,7 @@
 import { sceneTexels, type Placement, type SceneField, type SceneLayout } from "../types";
 
-/** `silhouette` follows the drawing's alpha; `luminance` also carries its brightness into the relief. */
-export type SceneMode = "silhouette" | "luminance";
+/** Photos carry a sharp mask for area-based dots; other drawings keep the background treatment. */
+export type SceneMode = "silhouette" | "luminance" | "photo";
 
 /** Draws inside a `width` x `height` box in CSS pixels, origin at its top-left corner. */
 export type Paint = (context: OffscreenCanvasRenderingContext2D, width: number, height: number) => void;
@@ -12,7 +12,7 @@ export interface RasterOptions {
   mode?: SceneMode;
   /** Where the drawing sits; defaults to the open field right of the pane column. */
   placement?: Placement;
-  /** Blur radius of the relief, in scene texels. */
+  /** Blur radius of the coverage, in scene texels. */
   softness?: number;
 }
 
@@ -26,7 +26,8 @@ function fit(box: Placement, aspect: number): Placement {
 }
 
 function defaultPlacement(layout: SceneLayout): Placement {
-  const left = Math.min(layout.band, layout.width * 0.6);
+  // Up to 3/4: a compact window leaves the field only a strip past the wide pane.
+  const left = Math.min(layout.band, layout.width * 0.75);
   const free = layout.width - left;
   const padX = free * 0.14;
   const padY = layout.height * 0.16;
@@ -72,7 +73,10 @@ function blur(source: Float32Array, radius: number): Float32Array {
   return from;
 }
 
-/** Paints a drawing over the canvas area and packs relief, ink, luminance and coverage. */
+/**
+ * Paints a drawing over the canvas area and packs accent mask, photo mask, luminance and coverage.
+ * Opaque dark parts of a drawing form the accent mask: their crests take the theme's `accent`.
+ */
 export function rasterScene(paint: Paint, layout: SceneLayout, options: RasterOptions): SceneField {
   const size = sceneTexels;
   const texels = size * size;
@@ -85,6 +89,12 @@ export function rasterScene(paint: Paint, layout: SceneLayout, options: RasterOp
   const rect = fit(options.placement ?? defaultPlacement(layout), options.aspect);
   const sx = size / Math.max(layout.width, 1);
   const sy = size / Math.max(layout.height, 1);
+  const photo = options.mode === "photo";
+
+  if (photo) {
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+  }
 
   context.setTransform(sx, 0, 0, sy, rect.x * sx, rect.y * sy);
   paint(context, rect.width, rect.height);
@@ -92,7 +102,8 @@ export function rasterScene(paint: Paint, layout: SceneLayout, options: RasterOp
   const pixels = context.getImageData(0, 0, size, size).data;
   const alpha = new Float32Array(texels);
   const brightness = new Float32Array(texels);
-  const luminance = options.mode === "luminance";
+  const accent = new Float32Array(texels);
+  const luminance = photo || options.mode === "luminance";
 
   for (let i = 0; i < texels; i++) {
     const o = i * 4;
@@ -101,19 +112,19 @@ export function rasterScene(paint: Paint, layout: SceneLayout, options: RasterOp
 
     alpha[i] = a;
     brightness[i] = luminance ? luma * a : a;
+    accent[i] = photo ? 0 : a * (1 - luma);
   }
 
   const softness = options.softness ?? 3;
-  const relief = blur(brightness, softness);
-  const coverage = blur(alpha, softness * 2);
+  const coverage = photo ? alpha : blur(alpha, softness * 2);
 
   for (let i = 0; i < texels; i++) {
     const o = i * 4;
 
-    data[o] = Math.round(relief[i] * 255);
-    data[o + 1] = Math.round(alpha[i] * 255);
+    data[o] = Math.round(accent[i] * 255);
+    data[o + 1] = photo ? Math.round(alpha[i] * 255) : 0;
     data[o + 2] = Math.round(brightness[i] * 255);
-    data[o + 3] = Math.round(Math.min(1, coverage[i] * 1.4) * 255);
+    data[o + 3] = Math.round(Math.min(1, coverage[i] * (photo ? 1 : 1.4)) * 255);
   }
 
   return { data };

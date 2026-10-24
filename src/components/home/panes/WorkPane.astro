@@ -3,6 +3,7 @@ import Pane from "../Pane.astro";
 import SectionLabel from "../SectionLabel.astro";
 import Separator from "../Separator.astro";
 import ExperienceItem from "../work/ExperienceItem.astro";
+import ProjectItem from "../work/ProjectItem.astro";
 import { featuredProjects, workExperiences } from "../../../data/site";
 ---
 
@@ -10,41 +11,21 @@ import { featuredProjects, workExperiences } from "../../../data/site";
   {
     workExperiences.map((work, index) => (
       <>
-        {index > 0 && <Separator class="my-7.5" />}
+        {index > 0 && <Separator class="my-6.25" />}
         <ExperienceItem work={work} index={index} />
       </>
     ))
   }
 
-  <Separator class="my-7.5" />
+  <Separator class="mt-7.5" />
+  <Separator variant="diagonal" class="mb-7.5" />
 
-  <section class="max-w-[68ch]" aria-labelledby="work-projects">
+  <section aria-labelledby="work-projects">
     <SectionLabel id="work-projects">Projects</SectionLabel>
-    <ul class="flex flex-col gap-7.5">
+    <ul class="-mx-unit flex w-[calc(100%+2*var(--spacing-unit))] flex-col border border-line">
       {
-        featuredProjects.map((project) => (
-          <li>
-            <div class="flex items-baseline justify-between gap-x-4 gap-y-3">
-              <a class="pane-link min-w-0 font-medium text-ink" href={project.projectHref}>
-                {project.title}
-              </a>
-              {(project.projectHref !== project.githubHref || project.liveHref) && (
-                <span class="inline-flex gap-3 text-[0.875rem]">
-                  {project.projectHref !== project.githubHref && (
-                    <a class="pane-link" href={project.githubHref} target="_blank" rel="noopener noreferrer">
-                      GitHub
-                    </a>
-                  )}
-                  {project.liveHref && (
-                    <a class="pane-link" href={project.liveHref} target="_blank" rel="noopener noreferrer">
-                      Live
-                    </a>
-                  )}
-                </span>
-              )}
-            </div>
-            <p>{project.summary}</p>
-          </li>
+        featuredProjects.map((project, index) => (
+          <ProjectItem project={project} index={index} />
         ))
       }
     </ul>
